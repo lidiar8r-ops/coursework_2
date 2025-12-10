@@ -7,7 +7,8 @@ class Vacancy():
     # Способами валидации данных - проверка указана или нет зарплата.
     # В этом случае выставлять значение зарплаты 0 или «Зарплата не указана» в зависимости от структуры класса.
     # Vacancy("Python Developer", "<https://hh.ru/vacancy/123456>", "100 000-150 000 руб.", "Требования: опыт работы от 3 лет...")
-    def __init__(self, name, link, pay, requirements, description, addres,  shedule):
+    def __init__(self, name: str, link: str, pay: str, requirements: str, description: str, addres: str = "",
+                 shedule: str = ""):
         self.name = name
         self.link = link
         if not pay:
@@ -15,6 +16,10 @@ class Vacancy():
             self.pay = 0
         else:
             self.pay = pay
+        self.requirements = requirements
+        self.description = description
+        self.adress = addres
+        self.shedule = shedule
 
 
 
@@ -23,7 +28,7 @@ class Vacancy():
         """Преобразование набора данных из JSON в список объектов"""
         pass
 
-    def filter_vacancies(self, vacancies_list, filter_words):
+    def filter_vacancies(self, vacancies_list: list, filter_words: list) -> list:
         """Фильтрация вакансий по словам"""
         pass
 
@@ -40,6 +45,9 @@ class Vacancy():
 
     def get_top_vacancies(sorted_vacancies, top_n):
         """Вывод вакансий, входящих в топ top_n, выводит первые n вакансий"""
+        pass
+
+    def print_vacancies(self, top_vacancies):
         pass
 
 

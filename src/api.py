@@ -1,15 +1,15 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
+from typing import Dict, Any
 
 from src.config import URL_HH
 from src import app_logger
 
 # Настройка логирования
-logger = app_logger.get_logger("api_hh.log")
+logger = app_logger.get_logger("api.log")
 
 
 # # Загрузка переменных из .env-файла
-# load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -19,17 +19,14 @@ class BaseAPI(ABC):
 
     def __init__(self, base_url: str):
         self.base_url = base_url
-        # self.headers = headers or {}
-        # self.session = requests.Session()
-        # self.session.headers.update(self.headers)
 
 
-    @ab
-    def get_params(self) -> Optional[Dict[Any, Any]]:
+    @abstractmethod
+    def get_params(self) -> Dict[Any, Any]:
         """Получить параметры для запросов"""
         pass
 
-    def _request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict[Any, Any]]:
+    def _request(self, method: str, endpoint: str, **kwargs) -> Dict[Any, Any]:
         """Вспомогательный метод для выполнения HTTP-запросов"""
         url = f"{self.base_url}/{endpoint}"
 
@@ -39,26 +36,26 @@ class BaseAPI(ABC):
             if response.status_code == 200:
                 return response.json()
             elif response.status_code == 403:
-                self.logger.error(f"Необходимо пройти CAPTCHA для : {url}")
+                logger.error(f"Необходимо пройти CAPTCHA для : {url}")
                 return None
             elif response.status_code == 404:
-                self.logger.error(f"Указанная вакансия не существует или у пользователя нет прав для просмотра вакансии:"
+                logger.error(f"Указанная вакансия не существует или у пользователя нет прав для просмотра вакансии:"
                                   f" {url}")
                 return None
             elif response.status_code == 401:
-                self.logger.error("Неавторизованный запрос. Проверьте токен.")
+                logger.error("Неавторизованный запрос. Проверьте токен.")
                 return None
             elif response.status_code == 429:
-                self.logger.error("Слишком много запросов запросов к API.")
+                logger.error("Слишком много запросов запросов к API.")
                 return None
             else:
-                self.logger.error(
+                logger.error(
                     f"Ошибка {response.status_code}: {response.text}"
                 )
                 return None
 
         except requests.exceptions.RequestException as e:
-            self.logger.error(f"Ошибка сети: {e}")
+            logger.error(f"Ошибка сети: {e}")
             return None
 
 
@@ -72,10 +69,10 @@ class HeadHunterAPI(BaseAPI):
     """ класс, наследующийся от абстрактного класса, для работы с платформой hh.ru.
         Класс умеет подключаться к API и получать вакансии. """
 
-    # def __init_(self):
-    #     pass
+    def __init_(self):
+        pass
 
-    def get_params(self, id: int = 104) -> Optional[Dict[Any, Any]]:
+    def get_params(self, id: int = 104) -> Dict[Any, Any]:
         """Получить параметры для запросов"""
         self.params = {
             "text": name,
@@ -84,7 +81,7 @@ class HeadHunterAPI(BaseAPI):
             "page": 0  # страница результатов
         }
 
-    def get_vacancies(self,  query: str, area: Optional[str] = None) -> Optional[Dict[Any, Any]]:
+    def get_vacancies(self,  query: str, area: str = None) -> Dict[Any, Any]:
         """Получение вакансий с hh.ru в формате JSON
            Args:
                query (str): поисковый запрос (название вакансии, навык и т.п.)
@@ -107,15 +104,15 @@ class AreaAPI(BaseAPI):
         # Далее получаем из area.json id
         pass
 
-    def get_params(self) -> Optional[Dict[Any, Any]]:
+    def get_params(self) -> Dict[Any, Any]:
         """Получить параметры для запросов"""
         self.params = base_url = "https://api.hh.ru/areas/"
         super().__init__(base_url)
 
-    def get_areas(self) -> Optional[Dict[Any, Any]]:
+    def get_areas(self) -> Dict[Any, Any]:
         return self._request("GET", "areas")
 
-    def find_area_id(self, area_name: str) -> Optional[str]:
+    def find_area_id(self, area_name: str) -> str:
         areas = self.get_areas()
         if not areas:
             return None
