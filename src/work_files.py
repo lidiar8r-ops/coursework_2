@@ -43,54 +43,29 @@ class JSONSaver(VacancyStorage):
         self.vacancies: List[Vacancy] = []
         self._load_data()
 
-    # def _load_data(self):
-    #     try:
-    #         with open(self.filename, "r", encoding="utf-8") as f:
-    #             data = json.load(f)
-    #             self.vacancies = [
-    #                 Vacancy(
-    #                     title=item["title"],
-    #                     url=item["url"],
-    #                     salary=item["salary"],
-    #                     description=item["description"],
-    #                     employer=item["employer"],
-    #                     published_at=item["published_at"]
-    #                 ) for item in data
-    #             ]
-    #     except (FileNotFoundError, json.JSONDecodeError) as e:
-    #         logger.warning(f"Не удалось загрузить данные из {self.filename}: {e}")
-    #         self.vacancies = []
-    #
-    #
-    # def _save_data(self):
-    #     try:
-    #         with open(self.filename, "w", encoding="utf-8") as f:
-    #             json.dump(
-    #                 [vacancy.to_dict() for vacancy in self.vacancies],
-    #                 f,
-    #                 ensure_ascii=False,
-    #                 indent=4
-    #             )
-    #     except IOError as e:
-    #         logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")
 
     def _add_vacancy(self, vacancy: Vacancy) -> bool:
         if self._is_duplicate(vacancy.url()):
             # print(f"Дубликат: вакансия с URL {vacancy.url()} уже существует.")
+            logger.info(f"Дубликат: вакансия с URL {vacancy.url()} уже существует.")
             return False
 
         self.vacancies.append(vacancy)
-        self.save()
+        self._save_data()
         print(f"Вакансия {vacancy.title()} добавлена.")
         return True
+
 
     def get_all(self) -> List[Vacancy]:
         return self.vacancies
 
+
     def clear(self) -> None:
         self.vacancies = []
-        self.save()
+        self._save_data()
         print("Файл очищен.")
+        logger.info("Файл очищен.")
+
 
     def _save_data(self) -> None:
         try:
@@ -103,7 +78,9 @@ class JSONSaver(VacancyStorage):
                 )
         except Exception as e:
             print(f"Ошибка при записи в файл {self.filename}: {e}")
+            logger.error(f"Ошибка при записи в файл {self.filename}: {e}")
             raise
+
 
     def _load_data(self) -> None:
         if not os.path.exists(self.filename):
@@ -126,13 +103,17 @@ class JSONSaver(VacancyStorage):
                 ]
         except (json.JSONDecodeError, KeyError, TypeError) as e:
             print(f"Ошибка при чтении файла {self.filename}: {e}")
+            logger.error(f"Ошибка при чтении файла {self.filename}: {e}")
             self.vacancies = []
+
 
     def _is_duplicate(self, url: str) -> bool:
         return any(v.url() == url for v in self.vacancies)
 
+
     def get_vacancies(self) -> List[Vacancy]:
         return self.vacancies
+
 
     def delete_vacancy(self, vacancy: Vacancy) -> bool:
         for i, v in enumerate(self.vacancies):
@@ -142,6 +123,7 @@ class JSONSaver(VacancyStorage):
                 return True
         return False
 
+
     def filter_by_keyword(self, keyword: str) -> List[Vacancy]:
         keyword_lower = keyword.lower()
         return [
@@ -150,14 +132,17 @@ class JSONSaver(VacancyStorage):
                 keyword_lower in v.description().lower())
         ]
 
+
     def get_top_by_salary(self, n: int) -> List[Vacancy]:
         sorted_vacancies = sorted(self.vacancies, reverse=True)
         return sorted_vacancies[:n]
+
 
         # Заглушки для будущей интеграции с БД
 
     def update_vacancy(self, vacancy: Vacancy) -> bool:
         return False
+
 
     def filter_by_salary_range(self, min_salary: float, max_salary: float) -> List[Vacancy]:
         return [
@@ -165,7 +150,7 @@ class JSONSaver(VacancyStorage):
             if min_salary <= v.get_salary_value() <= max_salary
         ]
 
+
     def filter_by_employer(self, employer: str) -> List[Vacancy]:
         employer_lower = employer.lower()
         return [v for v in self.vacancies if employer_lower in v.employer().lower()]
-

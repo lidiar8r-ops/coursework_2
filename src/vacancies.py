@@ -14,11 +14,14 @@ class Vacancy:
     def __init__(self, title: str, url: str, salary: str, description: str, employer: str, published_at: str):
         # Валидация обязательных полей
         # if not title or not title.strip():
+        #     logger.error("Название вакансии обязательно")
         #     raise ValueError("Название вакансии обязательно")
         if not url or not url.strip():
+            logger.error("URL вакансии обязателен")
             raise ValueError("URL вакансии обязателен")
 
         if not self._is_valid_url(url.strip()):
+            logger.error(f"Некорректный URL: {url}")
             raise ValueError(f"Некорректный URL: {url}")
 
 
@@ -113,6 +116,7 @@ class Vacancy:
         # Отладочная проверка: нет ли методов в значениях
         for key, value in data.items():
             if callable(value):
+                logger.error(f"Поле '{key}' содержит метод, а не значение: {value}")
                 raise TypeError(f"Поле '{key}' содержит метод, а не значение: {value}")
 
 
@@ -172,6 +176,8 @@ class Vacancy:
 
     @staticmethod
     def print_vacancies(vacancies: List["Vacancy"]):
+        """Вывод в консоль информацию о вакансии"""
+        logger.info("Вывод в консоль информацию о вакансиях")
         for i, vacancy in enumerate(vacancies, 1):
             print(f"{i}. {vacancy.title()}")
             print(f"Зарплата: {vacancy.salary()}")

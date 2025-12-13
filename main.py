@@ -12,8 +12,10 @@ logger = app_logger.get_logger("main.log")
 def user_interaction():
     """ ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
 
+    logger.info("Начало работы программы")
     print("Добро пожаловать в систему поиска вакансий!")
     print("=" * 50)
+    logger.info("=" * 50)
 
     hh_api = HeadHunterAPI()
     json_saver = JSONSaver()
@@ -60,10 +62,12 @@ def user_interaction():
             # print(area_id)
 
 
+            logger.info(f"Ищем вакансии по запросу '{query}'...")
             print(f"Ищем вакансии по запросу '{query}'...")
             raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
 
             if not raw_vacancies:
+                logger.info("Вакансий не найдено.")
                 print("Вакансий не найдено.")
                 continue
 
@@ -72,6 +76,7 @@ def user_interaction():
             for vacancy in vacancies:
                 json_saver._add_vacancy(vacancy)
 
+            logger.info(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
             print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
 
         elif choice == "2":
@@ -86,6 +91,7 @@ def user_interaction():
 
             top_vacancies = json_saver.get_top_by_salary(n)
             if not top_vacancies:
+                logger.info("Нет сохранённых вакансий.")
                 print("Нет сохранённых вакансий.")
             else:
                 print(f"\nТоп {n} вакансий по зарплате:")
@@ -99,16 +105,20 @@ def user_interaction():
 
             results = json_saver.filter_by_keyword(keyword)
             if not results:
+                logger.info("Вакансий с таким ключевым словом не найдено.")
                 print("Вакансий с таким ключевым словом не найдено.")
             else:
+                logger.info(f"\nНайдено {len(results)} вакансий с ключевым словом '{keyword}'")
                 print(f"\nНайдено {len(results)} вакансий с ключевым словом '{keyword}':")
                 Vacancy.print_vacancies(results)
 
         elif choice == "4":
             all_vacancies = json_saver.get_vacancies()
             if not all_vacancies:
+                logger.info("Нет сохранённых вакансий.")
                 print("Нет сохранённых вакансий.")
             else:
+                logger.info(f"\nВсего сохранено вакансий: {len(all_vacancies)}")
                 print(f"\nВсего сохранено вакансий: {len(all_vacancies)}")
                 Vacancy.print_vacancies(all_vacancies)
 
@@ -128,8 +138,10 @@ def user_interaction():
             )
 
             if json_saver.delete_vacancy(vacancy_to_delete):
+                logger.info("Вакансия удалена.")
                 print("Вакансия удалена.")
             else:
+                logger.info("Вакансия не найдена.")
                 print("Вакансия не найдена.")
 
         elif choice == "6":
@@ -137,26 +149,32 @@ def user_interaction():
                 min_sal = float(input("Минимальная зарплата: ") or 0)
                 max_sal = float(input("Максимальная зарплата: ") or float('inf'))
                 filtered = json_saver.filter_by_salary_range(min_sal, max_sal)
+                logger.info(f"Найдено {len(filtered)} вакансий в диапазоне {min_sal}–{max_sal}")
                 print(f"Найдено {len(filtered)} вакансий в диапазоне {min_sal}–{max_sal}")
                 Vacancy.print_vacancies(filtered)
             except ValueError:
+                logger.info("Некорректный формат зарплаты!")
                 print("Некорректный формат зарплаты!")
 
         elif choice == "7":
             employer = input("Название работодателя: ").strip()
             if not employer:
+                logger.info("Название работодателя не может быть пустым!")
                 print("Название работодателя не может быть пустым!")
                 continue
 
             results = json_saver.filter_by_employer(employer)
             if not results:
+                logger.info(f"Вакансий от {employer} не найдено.")
                 print(f"Вакансий от {employer} не найдено.")
             else:
+                logger.info(f"\nНайдено {len(results)} вакансий от {employer}:")
                 print(f"\nНайдено {len(results)} вакансий от {employer}:")
                 Vacancy.print_vacancies(results)
 
         elif choice == "8":
             print("До свидания!")
+            logger.info("Завершение работы программы")
             break
 
         else:
