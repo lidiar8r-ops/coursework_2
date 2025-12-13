@@ -2,7 +2,6 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
-from src.config import URL_HH
 from src import app_logger
 
 # Настройка логирования

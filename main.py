@@ -1,53 +1,164 @@
-from src.api import HeadHunterAPI, AreaAPI
-
-from src.config import URL_HH
+from src.api_hh import HeadHunterAPI
 from src.vacancies import Vacancy
+from src.work_files import JSONSaver
 
-
-# Создание экземпляра класса для работы с API сайтов с вакансиями
+# ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ
 def user_interaction():
-    """ Функция для взаимодействия с пользователем"""
+    print("Добро пожаловать в систему поиска вакансий!")
+    print("=" * 50)
 
-    # search_query = input("Введите поисковый запрос: ")
-    # area = (input("Введите город: ")
-    # top_n = int(input("Введите количество вакансий для вывода в топ N (не больше 20): "))
-    # filter_words = input("Введите ключевые слова для фильтрации вакансий: ").split()
-    # salary_range = input("Введите диапазон зарплат: ") # Пример: 100000 - 150000
-
-    platforms = ["HeadHunter"]
-    search_query = 'Python'
-    top_n = int(15)
-    filter_words = ("программист разработчик php").split()
-    salary_range = "100000 - 150000"
-    area = "Челябинск"
-
-
-    # Получение id города для поиска вакансий с hh.ru
-    id_area = AreaAPI(area).get_id_area()
-
-    # Получение вакансий с hh.ru в формате JSON
-    hh_api = HeadHunterAPI(URL_HH+"vacancies")
-    hh_vacancies = hh_api.get_vacancies(search_query, id_area)
-
-    # Преобразование набора данных из JSON в список объектов
-    vacancies_list = Vacancy.cast_to_object_list(hh_vacancies)
-
-    # # Пример работы контструктора класса с одной вакансией
-    # vacancy = Vacancy("Python Developer", "<https://hh.ru/vacancy/123456>", "100 000-150 000 руб.",
-    #                   "Требования: опыт работы от 3 лет...", "", "")
-
-    filtered_vacancies = vacancies_list.filter_vacancies(vacancies_list, filter_words)
-
-    ranged_vacancies = vacancies_list.get_vacancies_by_salary(filtered_vacancies, salary_range)
-
-    sorted_vacancies = vacancies_list.sort_vacancies(ranged_vacancies)
-    top_vacancies = vacancies_list.get_top_vacancies(sorted_vacancies, top_n)
-    print_vacancies(top_vacancies)
-
-    # Сохранение информации о вакансиях в файл
+    hh_api = HeadHunterAPI()
     json_saver = JSONSaver()
-    json_saver.add_vacancy(vacancy)
-    json_saver.delete_vacancy(vacancy)
+
+    while True:
+        print("\nВыберите действие:")
+        print("1. Поиск вакансий на hh.ru")
+        print("2. Показать топ N вакансий по зарплате")
+        print("3. Поиск по ключевому слову")
+        print("4. Показать все сохранённые вакансии")
+        print("5. Удалить вакансию по URL")
+        print("6. Поиск по диапазону зарплат")
+        print("7. Поиск по работодателю")
+        print("8. Выход")
+
+        choice = input("\nВведите номер действия (1–8): ").strip()
+
+        if choice == "1":
+            query = input("Введите поисковый запрос: ").strip()
+            if not query:
+                print("Запрос не может быть пустым!")
+                continue
+
+            try:
+                per_page = int(input("Сколько вакансий загрузить (по умолчанию 20): ") or 20)
+                if per_page <= 0:
+                    print("Количество должно быть положительным!")
+                    continue
+            except ValueError:
+                print("Некорректное число!")
+                continue
+
+            print(f"Ищем вакансии по запросу '{query}'...")
+            raw_vacancies = hh_api.get_vacancies(query, per_page=per_page)
+
+            if not raw_vacancies:
+                print("Вакансий не найдено.")
+                continue
+
+            vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
+
+            for vacancy in vacancies:
+                json_saver.add_vacancy(vacancy)
+
+            print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
+
+        elif choice == "2":
+            try:
+                n = int(input("Сколько вакансий показать в топе: "))
+                if n <= 0:
+                    print("Число должно быть положительным!")
+                    continue
+            except ValueError:
+                print("Некорректное число!")
+                continue
+
+            top_vacancies = json_saver.get_top_by_salary(n)
+            if not top_vacancies:
+                print("Нет сохранённых вакансий.")
+            else:
+                print(f"\nТоп {n} вакансий по зарплате:")
+                for i, vacancy in enumerate(top_vacancies, 1):
+                    print(f"{i}. {vacancy.title()}")
+                    print(f"Зарплата: {vacancy.salary()}")
+                    print(f"Работодатель: {vacancy.employer()}")
+                    print(f"Ссылка: {vacancy.url()}")
+                    print("-! * 50")
+
+        elif choice == "3":
+            keyword = input("Введите ключевое слово для поиска: ").strip()
+            if not keyword:
+                print("Ключевое слово не может быть пустым!")
+                continue
+
+            results = json_saver.filter_by_keyword(keyword)
+            if not results:
+                print("Вакансий с таким ключевым словом не найдено.")
+            else:
+                print(f"\nНайдено {len(results)} вакансий с ключевым словом '{keyword}':")
+                for i, vacancy in enumerate(results, 1):
+                    print(f"{i}. {vacancy.title()}")
+                    print(f"Зарплата: {vacancy.salary()}")
+                    print(f"Описание: {vacancy.description()[:100]}...")
+                    print(f"Ссылка: {vacancy.url()}")
+                    print("-! * 50")
+
+        elif choice == "4":
+            all_vacancies = json_saver.get_vacancies()
+            if not all_vacancies:
+                print("Нет сохранённых вакансий.")
+            else:
+                print(f"\nВсего сохранено вакансий: {len(all_vacancies)}")
+                for i, vacancy in enumerate(all_vacancies, 1):
+                    print(f"{i}. {vacancy.title()}")
+                    print(f"Зарплата: {vacancy.salary()}")
+                    print(f"   Работодатель: {vacancy.employer()}")
+                    print(f"Ссылка: {vacancy.url()}")
+                    print("-! * 50")
+
+        elif choice == "5":
+            url = input("Введите URL вакансии для удаления: ").strip()
+            if not url:
+                print("URL не может быть пустым!")
+                continue
+
+            vacancy_to_delete = Vacancy(
+                title="",
+                url=url,
+                salary=None,
+                description="",
+                employer=""
+            )
+
+            if json_saver.delete_vacancy(vacancy_to_delete):
+                print("Вакансия удалена.")
+            else:
+                print("Вакансия не найдена.")
+
+        elif choice == "6":
+            try:
+                min_sal = float(input("Минимальная зарплата: ") or 0)
+                max_sal = float(input("Максимальная зарплата: ") or float('inf'))
+                filtered = json_saver.filter_by_salary_range(min_sal, max_sal)
+                print(f"Найдено {len(filtered)} вакансий в диапазоне {min_sal}–{max_sal}")
+                for i, vacancy in enumerate(filtered, 1):
+                    print(f"{i}. {vacancy.title()} ({vacancy.salary()})")
+                    print(f"{vacancy.url()}")
+                    print("-! * 50")
+            except ValueError:
+                print("Некорректный формат зарплаты!")
+
+        elif choice == "7":
+            employer = input("Название работодателя: ").strip()
+            if not employer:
+                print("Название работодателя не может быть пустым!")
+                continue
+
+            results = json_saver.filter_by_employer(employer)
+            if not results:
+                print(f"Вакансий от {employer} не найдено.")
+            else:
+                print(f"\nНайдено {len(results)} вакансий от {employer}:")
+                for i, vacancy in enumerate(results, 1):
+                    print(f"{i}. {vacancy.title()} ({vacancy.salary()})")
+                    print(f"{vacancy.url()}")
+                    print("-! * 50")
+
+        elif choice == "8":
+            print("До свидания!")
+            break
+
+        else:
+            print("Неверный выбор. Пожалуйста, введите число от 1 до 8.")
 
 
 if __name__ == "__main__":
