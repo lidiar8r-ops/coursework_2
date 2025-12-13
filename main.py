@@ -1,7 +1,11 @@
+from src import app_logger
 from src.api_hh import HeadHunterAPI
 from src.vacancies import Vacancy
 from src.work_files import JSONSaver
 
+
+# Настройка логирования
+logger = app_logger.get_logger(__name__)
 
 def user_interaction():
     """ ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
@@ -39,6 +43,13 @@ def user_interaction():
             except ValueError:
                 print("Некорректное число!")
                 continue
+
+            # try:
+            #     area_name = int(input("Введите населенный пункт: ") or "Челябинск")
+            #
+            # except ValueError:
+            #     print("Некорректный населенный пункт!")
+            #     continue
 
             print(f"Ищем вакансии по запросу '{query}'...")
             raw_vacancies = hh_api.get_vacancies(query, per_page=per_page)

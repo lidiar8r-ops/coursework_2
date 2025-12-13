@@ -1,13 +1,15 @@
 import json
+import os
 from abc import ABC, abstractmethod
 from typing import List
 
 from src import app_logger
+from src.config import DATA_DIR
 from src.vacancies import Vacancy
 
 
 # Настройка логирования
-logger = app_logger.get_logger("api.log")
+logger = app_logger.get_logger(__name__)
 
 
 class VacancyStorage(ABC):
@@ -35,6 +37,7 @@ class VacancyStorage(ABC):
 # РЕАЛИЗАЦИЯ ХРАНЕНИЯ В JSON
 class JSONSaver(VacancyStorage):
     def __init__(self, filename: str = "vacancies.json"):
+        filename = os.path.join(DATA_DIR, filename)
         self.filename = filename
         self.vacancies: List[Vacancy] = []
         self._load_data()

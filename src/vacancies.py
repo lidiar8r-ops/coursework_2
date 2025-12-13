@@ -6,10 +6,11 @@ from typing import Dict, Any
 from src import app_logger
 
 # Настройка логирования
-logger = app_logger.get_logger("api.log")
+logger = app_logger.get_logger(__name__)
 
-# КЛАСС ВАКАНСИИ
+
 class Vacancy:
+    """КЛАСС ВАКАНСИИ"""
     def __init__(self, title: str, url: str, salary: str, description: str, employer: str):
         # Валидация обязательных полей
         if not title or not url:

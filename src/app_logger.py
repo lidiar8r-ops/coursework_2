@@ -36,6 +36,7 @@ def get_logger(name: str) -> Logger:
     """
     Создаёт логгер с файловым и консольным обработчиками.
 
+    :rtype: Logger
     :param name: имя логгера (обычно __name__ модуля)
     :return: настроеннный экземпляр Logger
     """

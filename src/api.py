@@ -13,49 +13,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class BaseAPI(ABC):
-    """Абстрактный базовый класс для работы с API"""
-
-    def __init__(self, base_url: str):
-        self.base_url = base_url
-
-
-    @abstractmethod
-    def get_params(self) -> Dict[Any, Any]:
-        """Получить параметры для запросов"""
-        pass
-
-    def _request(self, method: str, endpoint: str, **kwargs) -> Dict[Any, Any]:
-        """Вспомогательный метод для выполнения HTTP-запросов"""
-        url = f"{self.base_url}/{endpoint}"
-
-        try:
-            response = self.session.request(method, url, **kwargs)
-
-            if response.status_code == 200:
-                return response.json()
-            elif response.status_code == 403:
-                logger.error(f"Необходимо пройти CAPTCHA для : {url}")
-                return None
-            elif response.status_code == 404:
-                logger.error(f"Указанная вакансия не существует или у пользователя нет прав для просмотра вакансии:"
-                                  f" {url}")
-                return None
-            elif response.status_code == 401:
-                logger.error("Неавторизованный запрос. Проверьте токен.")
-                return None
-            elif response.status_code == 429:
-                logger.error("Слишком много запросов запросов к API.")
-                return None
-            else:
-                logger.error(
-                    f"Ошибка {response.status_code}: {response.text}"
-                )
-                return None
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Ошибка сети: {e}")
-            return None
+# class BaseAPI(ABC):
+#     """Абстрактный базовый класс для работы с API"""
+#
+#     def __init__(self, base_url: str):
+#         self.base_url = base_url
+#
+#
+#     @abstractmethod
+#     def get_params(self) -> Dict[Any, Any]:
+#         """Получить параметры для запросов"""
+#         pass
+#
+#
 
 
 class HeadHunterAPI(BaseAPI):
