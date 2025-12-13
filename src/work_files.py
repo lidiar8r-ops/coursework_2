@@ -205,7 +205,7 @@ class JSONSaver(VacancyStorage):
         """
         return self.vacancies
 
-    def delete_vacancy(self, vacancy: Vacancy) -> bool:
+    def delete_vacancy(self, vacancy: Vacancy, all_del="нет") -> bool:
         """
         Удаляет вакансию из хранилища.
 
@@ -215,12 +215,17 @@ class JSONSaver(VacancyStorage):
         Returns:
             bool: True, если вакансия была успешно удалена, иначе False.
         """
-        for index, current_vacancy in enumerate(self.vacancies):
-            if current_vacancy.url() == vacancy.url():
-                del self.vacancies[index]
-                self._save_data()
-                return True
-        return False
+        if all_del.lower() == "y" or all_del.lower() == "да" or all_del.lower() == "yes":
+            with open(self.filename, 'w', encoding='utf-8') as f:
+                self.vacancies: List[Vacancy] = []
+                return True  # ничего не записываем
+        else:
+            for index, current_vacancy in enumerate(self.vacancies):
+                if current_vacancy.url() == vacancy.url():
+                    del self.vacancies[index]
+                    self._save_data()
+                    return True
+            return False
 
     def filter_by_keyword(self, keyword: str) -> List[Vacancy]:
         """

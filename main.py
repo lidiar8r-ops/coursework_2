@@ -1,6 +1,7 @@
 from src import app_logger
 from src.api import AreaAPI
 from src.api_hh import HeadHunterAPI
+from src.config import URL_HH
 from src.vacancies import Vacancy
 from src.work_files import JSONSaver
 
@@ -28,9 +29,10 @@ def user_interaction():
         print("5. Удалить вакансию по URL")
         print("6. Поиск по диапазону зарплат")
         print("7. Поиск по работодателю")
-        print("8. Выход")
+        print("8. Удаление всех вакансий")
+        print("9. Выход")
 
-        choice = input("\nВведите номер действия (1–8): ").strip()
+        choice = input("\nВведите номер действия (1–9): ").strip()
 
         if choice == "1":
             query = input("Введите поисковый запрос: ").strip()
@@ -164,13 +166,26 @@ def user_interaction():
                 print(f"\nНайдено {len(results)} вакансий от {employer}:")
                 Vacancy.print_vacancies(results)
 
+
         elif choice == "8":
+
+            str_del = input("Удалить все вакансии? ").strip()
+            if json_saver.delete_vacancy(Vacancy(title="", url=URL_HH, salary=None, description="", employer="", published_at="")
+, str_del):
+                logger.info("Все вакансии удалены")
+                print("Все вакансии удалены")
+            else:
+                logger.info("Удаление всех вакансий отменено")
+                print("Удаление всех вакансий отменено")
+
+
+        elif choice == "9":
             print("До свидания!")
             logger.info("Завершение работы программы")
             break
 
         else:
-            print("Неверный выбор. Пожалуйста, введите число от 1 до 8.")
+            print("Неверный выбор. Пожалуйста, введите число от 1 до 9.")
 
 
 if __name__ == "__main__":
