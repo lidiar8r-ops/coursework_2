@@ -1,17 +1,15 @@
 from src import app_logger
 from src.api import AreaAPI
 from src.api_hh import HeadHunterAPI
-
 from src.vacancies import Vacancy
 from src.work_files import JSONSaver
-
 
 # Настройка логирования
 logger = app_logger.get_logger("main.log")
 
 
 def user_interaction():
-    """ ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
+    """ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
 
     logger.info("Начало работы программы")
     print("Добро пожаловать в систему поиска вакансий!")
@@ -42,7 +40,6 @@ def user_interaction():
 
             excluded_text = input("Введите слова исключения в запросе: ").strip()
 
-
             try:
                 per_page = int(input("Сколько вакансий загрузить (по умолчанию 20): ") or 20)
                 if per_page <= 0:
@@ -52,7 +49,6 @@ def user_interaction():
                 print("Некорректное число!")
                 continue
 
-
             try:
                 area_str = input("Введите населенный пункт: ")
             except ValueError:
@@ -61,7 +57,6 @@ def user_interaction():
             area_api = AreaAPI(area_str)
             area_id = area_api.get_id_area()
             # print(area_id)
-
 
             logger.info(f"Ищем вакансии по запросу '{query}'...")
             print(f"Ищем вакансии по запросу '{query}'...")
@@ -77,7 +72,7 @@ def user_interaction():
             count_add_vacansies = 0
             for vacancy in vacancies:
                 if json_saver._add_vacancy(vacancy):
-                    count_add_vacansies +=1
+                    count_add_vacansies += 1
 
             logger.info(f"Найдено {len(vacancies)} вакансий. Сохранены в файл {count_add_vacansies} новых вакансий")
             print(f"Найдено {len(vacancies)} вакансий. Сохранены в файл {count_add_vacansies} новых вакансий")
@@ -131,14 +126,7 @@ def user_interaction():
                 print("URL не может быть пустым!")
                 continue
 
-            vacancy_to_delete = Vacancy(
-                title="",
-                url=url,
-                salary=None,
-                description="",
-                employer="",
-                published_at=""
-            )
+            vacancy_to_delete = Vacancy(title="", url=url, salary=None, description="", employer="", published_at="")
 
             if json_saver.delete_vacancy(vacancy_to_delete):
                 logger.info("Вакансия удалена.")
@@ -150,7 +138,7 @@ def user_interaction():
         elif choice == "6":
             try:
                 min_sal = float(input("Минимальная зарплата: ") or 0)
-                max_sal = float(input("Максимальная зарплата: ") or float('inf'))
+                max_sal = float(input("Максимальная зарплата: ") or float("inf"))
                 filtered = json_saver.filter_by_salary_range(min_sal, max_sal)
                 logger.info(f"Найдено {len(filtered)} вакансий в диапазоне {min_sal}–{max_sal}")
                 print(f"Найдено {len(filtered)} вакансий в диапазоне {min_sal}–{max_sal}")

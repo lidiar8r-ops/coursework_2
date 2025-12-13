@@ -11,4 +11,3 @@ URL_HH = "https://api.hh.ru/"
 
 filename_areas = os.path.join(DATA_DIR, "areas.json")
 filename_vacan = os.path.join(DATA_DIR, "vacancies.json")
-

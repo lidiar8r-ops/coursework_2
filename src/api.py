@@ -1,8 +1,6 @@
 import json
-import logging
 import os
-from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -41,11 +39,11 @@ logger = app_logger.get_logger("api.log")
 
 class AreaAPI(BaseAPI):
     """Создание экземпляра класса для работы с API сайтов с вакансиями"""
+
     def __init__(self, area: str, filename: str = filename_areas):
         self.area = area
         self.filename = filename
         self.session = requests.Session()
-
 
     def get_id_area(self):
         # Если файл area.json существует, то
@@ -58,17 +56,15 @@ class AreaAPI(BaseAPI):
             with open(self.filename, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-        area_id =  self.find_area_id(data, self.area)
+        area_id = self.find_area_id(data, self.area)
         return area_id
 
-
-    def get_vacancies(self, name: str = "") -> List[Dict[str, Any]]:
+    def get_vacancies(self, name: str = "") -> Optional[dict[Any, Any]]:
         # params = {"name": name}
         params = {}
         data = self._request("areas", params)  # вызов внутри класса
         self._save_data(data)
         return data
-
 
     def find_area_id(self, data: dict, area_name: str) -> str:
         areas = data
@@ -87,14 +83,9 @@ class AreaAPI(BaseAPI):
 
         return search_in_areas(areas, area_name)
 
-
     def _save_data(self, data):
         try:
             with open(self.filename, "w", encoding="utf-8") as f:
-                json.dump(data,
-                    f,
-                    ensure_ascii=False,
-                    indent=4
-                )
+                json.dump(data, f, ensure_ascii=False, indent=4)
         except IOError as e:
             logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")
