@@ -8,3 +8,7 @@ LOG_DIR = os.path.join(PARENT_DIR, "logs")
 DATA_DIR = os.path.join(PARENT_DIR, "data")
 # TEMP_DIR = os.path.join(CURRENT_DIR, "tmp")
 URL_HH = "https://api.hh.ru/"
+
+filename_areas = os.path.join(DATA_DIR, "areas.json")
+filename_vacan = os.path.join(DATA_DIR, "vacancies.json")
+

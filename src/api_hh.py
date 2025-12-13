@@ -24,7 +24,7 @@ class BaseAPI(ABC):
             response = self.session.get(self.url, params=params)
 
             if response.status_code == 200:
-                return response.json().get("items", [])
+                return response.json()
             elif response.status_code == 403:
                 logger.error(f"Необходимо пройти CAPTCHA для : {url}")
                 return None
@@ -62,5 +62,6 @@ class HeadHunterAPI(BaseAPI):
             "per_page": per_page,
             "page": 0
         }
-
-        return self._request("vacancies", params)  # вызов внутри класса
+        data = self._request("vacancies", params)
+        data_query = data.get("items", [])
+        return data_query

@@ -1,10 +1,10 @@
 import json
-import os
+
 from abc import ABC, abstractmethod
 from typing import List
 
 from src import app_logger
-from src.config import DATA_DIR
+from src.config import filename_vacan
 from src.vacancies import Vacancy
 
 
@@ -34,10 +34,10 @@ class VacancyStorage(ABC):
     def get_top_by_salary(self, n: int) -> List[Vacancy]:
         pass
 
-# РЕАЛИЗАЦИЯ ХРАНЕНИЯ В JSON
+
 class JSONSaver(VacancyStorage):
-    def __init__(self, filename: str = "vacancies.json"):
-        filename = os.path.join(DATA_DIR, filename)
+    """ РЕАЛИЗАЦИЯ ХРАНЕНИЯ В JSON"""
+    def __init__(self, filename: str = filename_vacan):
         self.filename = filename
         self.vacancies: List[Vacancy] = []
         self._load_data()
@@ -52,7 +52,8 @@ class JSONSaver(VacancyStorage):
                         url=item["url"],
                         salary=item["salary"],
                         description=item["description"],
-                        employer=item["employer"]
+                        employer=item["employer"],
+                        published_at=item["published_at"]
                     ) for item in data
                 ]
         except (FileNotFoundError, json.JSONDecodeError) as e:
@@ -67,7 +68,7 @@ class JSONSaver(VacancyStorage):
                     [vacancy.to_dict() for vacancy in self.vacancies],
                     f,
                     ensure_ascii=False,
-                    indent=2
+                    indent=4
                 )
         except IOError as e:
             logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")

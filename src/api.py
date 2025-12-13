@@ -1,16 +1,17 @@
+import json
 import logging
+import os
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, List
+
+import requests
 
 from src import app_logger
+from src.api_hh import BaseAPI
+from src.config import filename_areas
 
 # Настройка логирования
 logger = app_logger.get_logger("api.log")
-
-
-# # Загрузка переменных из .env-файла
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # class AreaAPI(BaseAPI):
 #     """ класс, наследующийся от абстрактного класса, для работы с платформой hh.ru.
@@ -40,8 +41,10 @@ logger = logging.getLogger(__name__)
 
 class AreaAPI(BaseAPI):
     """Создание экземпляра класса для работы с API сайтов с вакансиями"""
-    def __init_(self, area: str):
+    def __init__(self, area: str, filename: str = filename_areas):
         self.area = area
+        self.filename = filename
+        self.session = requests.Session()
 
 
     def get_id_area(self):
@@ -49,20 +52,28 @@ class AreaAPI(BaseAPI):
         # ищем в файле area.json ,
         # если нет получаем файл area.json с hh.ru
         # Далее получаем из area.json id
-        pass
+        if not os.path.exists(self.filename):
+            data = self.get_vacancies()
+        else:
+            with open(self.filename, "r", encoding="utf-8") as f:
+                data = json.load(f)
 
-    def get_params(self) -> Dict[Any, Any]:
-        """Получить параметры для запросов"""
-        self.params = base_url = "https://api.hh.ru/areas/"
-        super().__init__(base_url)
+        area_id =  self.find_area_id(data, self.area)
+        return area_id
 
-    def get_areas(self) -> Dict[Any, Any]:
-        return self._request("GET", "areas")
 
-    def find_area_id(self, area_name: str) -> str:
-        areas = self.get_areas()
+    def get_vacancies(self, name: str = "") -> List[Dict[str, Any]]:
+        # params = {"name": name}
+        params = {}
+        data = self._request("areas", params)  # вызов внутри класса
+        self._save_data(data)
+        return data
+
+
+    def find_area_id(self, data: dict, area_name: str) -> str:
+        areas = data
         if not areas:
-            return None
+            return 0
 
         def search_in_areas(areas_list, name):
             for area in areas_list:
@@ -72,6 +83,18 @@ class AreaAPI(BaseAPI):
                     result = search_in_areas(area["areas"], name)
                     if result:
                         return result
-            return None
+            return 0
 
         return search_in_areas(areas, area_name)
+
+
+    def _save_data(self, data):
+        try:
+            with open(self.filename, "w", encoding="utf-8") as f:
+                json.dump(data,
+                    f,
+                    ensure_ascii=False,
+                    indent=4
+                )
+        except IOError as e:
+            logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")

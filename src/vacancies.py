@@ -11,7 +11,7 @@ logger = app_logger.get_logger("vacansies.log")
 
 class Vacancy:
     """КЛАСС ВАКАНСИИ"""
-    def __init__(self, title: str, url: str, salary: str, description: str, employer: str):
+    def __init__(self, title: str, url: str, salary: str, description: str, employer: str, published_at: str):
         # Валидация обязательных полей
         if not title or not url:
             raise ValueError("Название вакансии и URL обязательны")
@@ -23,6 +23,7 @@ class Vacancy:
         self._salary = self._process_salary(salary)
         self._description = description.strip() if description else "Описание не указано"
         self._employer = employer.strip() if employer else "Работодатель не указан"
+        self._published_at = published_at.strip() if published_at else ""
 
     def _is_valid_url(self, url: str) -> bool:
         pattern = re.compile(
@@ -68,6 +69,9 @@ class Vacancy:
     def employer(self) -> str:
         return self._employer
 
+    def published_at(self) -> str:
+        return self._published_at
+
     # Сеттеры (опционально, с валидацией)
     def set_salary(self, value: str):
         self._salary = self._process_salary(value)
@@ -78,7 +82,8 @@ class Vacancy:
             "url": self._url,
             "salary": self._salary,
             "description": self._description,
-            "employer": self._employer
+            "employer": self._employer,
+            "published_at": self.published_at
         }
 
     @classmethod
@@ -104,7 +109,8 @@ class Vacancy:
             url=item["alternate_url"],
             salary=salary_str,
             description=item.get("snippet", {}).get("requirement", "") or "",
-            employer=item.get("employer", {}).get("name", "")
+            employer=item.get("employer", {}).get("name", ""),
+            published_at=item.get("published_at", {}).get("published_at", "")
         )
 
     # Методы сравнения

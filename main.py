@@ -1,4 +1,5 @@
 from src import app_logger
+from src.api import AreaAPI
 from src.api_hh import HeadHunterAPI
 from src.vacancies import Vacancy
 from src.work_files import JSONSaver
@@ -14,7 +15,6 @@ def user_interaction():
     print("=" * 50)
 
     hh_api = HeadHunterAPI()
-    area_api = HeadHunterAPI()
     json_saver = JSONSaver()
 
     while True:
@@ -50,11 +50,14 @@ def user_interaction():
 
 
             try:
-                area_name = int(input("Введите населенный пункт: ") or "Челябинск")
-                area_id =
+                area_str = input("Введите населенный пункт: ")
             except ValueError:
                 print("Некорректный населенный пункт!")
                 continue
+            area_api = AreaAPI(area_str)
+            area_id = area_api.get_id_area()
+            print(area_id)
+
 
             print(f"Ищем вакансии по запросу '{query}'...")
             raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
