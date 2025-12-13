@@ -7,7 +7,7 @@ from src import app_logger
 from src.config import URL_HH
 
 # Настройка логирования
-logger = app_logger.get_logger(__name__) #"api.log"
+logger = app_logger.get_logger("api_hh.log") #"api.log"
 
 
 class BaseAPI(ABC):
@@ -54,9 +54,10 @@ class HeadHunterAPI(BaseAPI):
     def __init__(self):
         self.session = requests.Session()
 
-    def get_vacancies(self, query: str, area: int = 104, per_page: int = 20) -> List[Dict[str, Any]]:
+    def get_vacancies(self, query: str, excluded_text: str, area: int = 104, per_page: int = 20) -> List[Dict[str, Any]]:
         params = {
             "text": query,
+            "excluded_text": excluded_text,
             "area": area,
             "per_page": per_page,
             "page": 0

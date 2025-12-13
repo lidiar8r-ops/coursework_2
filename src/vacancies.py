@@ -6,7 +6,7 @@ from typing import Dict, Any
 from src import app_logger
 
 # Настройка логирования
-logger = app_logger.get_logger(__name__)
+logger = app_logger.get_logger("vacansies.log")
 
 
 class Vacancy:

@@ -12,46 +12,30 @@ logger = app_logger.get_logger("api.log")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# class BaseAPI(ABC):
-#     """Абстрактный базовый класс для работы с API"""
+# class AreaAPI(BaseAPI):
+#     """ класс, наследующийся от абстрактного класса, для работы с платформой hh.ru.
+#         Класс умеет подключаться к API и получать вакансии. """
 #
-#     def __init__(self, base_url: str):
-#         self.base_url = base_url
-#
-#
-#     @abstractmethod
-#     def get_params(self) -> Dict[Any, Any]:
-#         """Получить параметры для запросов"""
+#     def __init_(self):
 #         pass
 #
+#     def get_params(self, id: int = 104) -> Dict[Any, Any]:
+#         """Получить параметры для запросов"""
+#         self.params = {
+#             "text": name,
+#             "area": id,  # Челябинск (по умолчанию, пока что)
+#             "per_page": 20,  # количество вакансий в ответе
+#             "page": 0  # страница результатов
+#         }
 #
-
-
-class HeadHunterAPI(BaseAPI):
-    """ класс, наследующийся от абстрактного класса, для работы с платформой hh.ru.
-        Класс умеет подключаться к API и получать вакансии. """
-
-    def __init_(self):
-        pass
-
-    def get_params(self, id: int = 104) -> Dict[Any, Any]:
-        """Получить параметры для запросов"""
-        self.params = {
-            "text": name,
-            "area": id,  # Челябинск (по умолчанию, пока что)
-            "per_page": 20,  # количество вакансий в ответе
-            "page": 0  # страница результатов
-        }
-
-    def get_vacancies(self,  query: str, area: str = None) -> Dict[Any, Any]:
-        """Получение вакансий с hh.ru в формате JSON
-           Args:
-               query (str): поисковый запрос (название вакансии, навык и т.п.)
-           Returns:
-               dict: JSON-ответ от API hh.ru
-        """
-        pass
+#     def get_vacancies(self,  query: str, area: str = None) -> Dict[Any, Any]:
+#         """Получение вакансий с hh.ru в формате JSON
+#            Args:
+#                query (str): поисковый запрос (название вакансии, навык и т.п.)
+#            Returns:
+#                dict: JSON-ответ от API hh.ru
+#         """
+#         pass
 
 
 class AreaAPI(BaseAPI):

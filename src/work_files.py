@@ -9,7 +9,7 @@ from src.vacancies import Vacancy
 
 
 # Настройка логирования
-logger = app_logger.get_logger(__name__)
+logger = app_logger.get_logger("work_files.log")
 
 
 class VacancyStorage(ABC):

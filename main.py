@@ -5,7 +5,7 @@ from src.work_files import JSONSaver
 
 
 # Настройка логирования
-logger = app_logger.get_logger(__name__)
+logger = app_logger.get_logger("main.log")
 
 def user_interaction():
     """ ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
@@ -14,6 +14,7 @@ def user_interaction():
     print("=" * 50)
 
     hh_api = HeadHunterAPI()
+    area_api = HeadHunterAPI()
     json_saver = JSONSaver()
 
     while True:
@@ -35,6 +36,9 @@ def user_interaction():
                 print("Запрос не может быть пустым!")
                 continue
 
+            excluded_text = input("Введите слова исключения в запросе: ").strip()
+
+
             try:
                 per_page = int(input("Сколько вакансий загрузить (по умолчанию 20): ") or 20)
                 if per_page <= 0:
@@ -44,15 +48,16 @@ def user_interaction():
                 print("Некорректное число!")
                 continue
 
-            # try:
-            #     area_name = int(input("Введите населенный пункт: ") or "Челябинск")
-            #
-            # except ValueError:
-            #     print("Некорректный населенный пункт!")
-            #     continue
+
+            try:
+                area_name = int(input("Введите населенный пункт: ") or "Челябинск")
+                area_id =
+            except ValueError:
+                print("Некорректный населенный пункт!")
+                continue
 
             print(f"Ищем вакансии по запросу '{query}'...")
-            raw_vacancies = hh_api.get_vacancies(query, per_page=per_page)
+            raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
 
             if not raw_vacancies:
                 print("Вакансий не найдено.")
