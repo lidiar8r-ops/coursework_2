@@ -60,6 +60,7 @@ def user_interaction():
 
             logger.info(f"Ищем вакансии по запросу '{query}'...")
             print(f"Ищем вакансии по запросу '{query}'...")
+            # print(query, excluded_text,area_id,per_page)
             raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
 
             if not raw_vacancies:

@@ -60,5 +60,10 @@ class HeadHunterAPI(BaseAPI):
     ) -> List[Dict[str, Any]]:
         params = {"text": query, "excluded_text": excluded_text, "area": area, "per_page": per_page, "page": 0}
         data = self._request("vacancies", params)
+        # Проверяем, что data не None и это словарь
+        if not data or not isinstance(data, dict):
+            logger.warning("Получен пустой или невалидный ответ от API: %s", data)
+            return []
+
         data_query = data.get("items", [])
         return data_query
