@@ -92,7 +92,7 @@ class JSONSaver(VacancyStorage):
         self.save()
         print("Файл очищен.")
 
-    def save(self) -> None:
+    def _save_data(self) -> None:
         try:
             with open(self.filename, "w", encoding="utf-8") as f:
                 json.dump(

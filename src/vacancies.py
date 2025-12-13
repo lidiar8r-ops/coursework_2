@@ -1,6 +1,6 @@
 import re
 from urllib.parse import urlparse
-from typing import Dict, Any
+from typing import Dict, Any, List
 import logging
 
 
@@ -13,8 +13,8 @@ class Vacancy:
 
     def __init__(self, title: str, url: str, salary: str, description: str, employer: str, published_at: str):
         # Валидация обязательных полей
-        if not title or not title.strip():
-            raise ValueError("Название вакансии обязательно")
+        # if not title or not title.strip():
+        #     raise ValueError("Название вакансии обязательно")
         if not url or not url.strip():
             raise ValueError("URL вакансии обязателен")
 
@@ -169,3 +169,13 @@ class Vacancy:
     def __repr__(self) -> str:
         return (f"Vacancy(title='{self._title}', url='{self._url}', "
                 f"salary='{self._salary}', employer='{self._employer}', published_at='{self._published_at}')")
+
+    @staticmethod
+    def print_vacancies(vacancies: List["Vacancy"]):
+        for i, vacancy in enumerate(vacancies, 1):
+            print(f"{i}. {vacancy.title()}")
+            print(f"Зарплата: {vacancy.salary()}")
+            print(f"Описание: {vacancy.description()[:100]}...")
+            print(f"Работодатель: {vacancy.employer()}")
+            print(f"Ссылка: {vacancy.url()}")
+            print("=" * 50)

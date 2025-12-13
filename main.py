@@ -1,6 +1,7 @@
 from src import app_logger
 from src.api import AreaAPI
 from src.api_hh import HeadHunterAPI
+
 from src.vacancies import Vacancy
 from src.work_files import JSONSaver
 
@@ -69,7 +70,7 @@ def user_interaction():
             vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
 
             for vacancy in vacancies:
-                json_saver.add_vacancy(vacancy)
+                json_saver._add_vacancy(vacancy)
 
             print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
 
@@ -88,12 +89,7 @@ def user_interaction():
                 print("Нет сохранённых вакансий.")
             else:
                 print(f"\nТоп {n} вакансий по зарплате:")
-                for i, vacancy in enumerate(top_vacancies, 1):
-                    print(f"{i}. {vacancy.title()}")
-                    print(f"Зарплата: {vacancy.salary()}")
-                    print(f"Работодатель: {vacancy.employer()}")
-                    print(f"Ссылка: {vacancy.url()}")
-                    print("-! * 50")
+                Vacancy.print_vacancies(top_vacancies)
 
         elif choice == "3":
             keyword = input("Введите ключевое слово для поиска: ").strip()
@@ -106,12 +102,7 @@ def user_interaction():
                 print("Вакансий с таким ключевым словом не найдено.")
             else:
                 print(f"\nНайдено {len(results)} вакансий с ключевым словом '{keyword}':")
-                for i, vacancy in enumerate(results, 1):
-                    print(f"{i}. {vacancy.title()}")
-                    print(f"Зарплата: {vacancy.salary()}")
-                    print(f"Описание: {vacancy.description()[:100]}...")
-                    print(f"Ссылка: {vacancy.url()}")
-                    print("-! * 50")
+                Vacancy.print_vacancies(results)
 
         elif choice == "4":
             all_vacancies = json_saver.get_vacancies()
@@ -119,12 +110,7 @@ def user_interaction():
                 print("Нет сохранённых вакансий.")
             else:
                 print(f"\nВсего сохранено вакансий: {len(all_vacancies)}")
-                for i, vacancy in enumerate(all_vacancies, 1):
-                    print(f"{i}. {vacancy.title()}")
-                    print(f"Зарплата: {vacancy.salary()}")
-                    print(f"   Работодатель: {vacancy.employer()}")
-                    print(f"Ссылка: {vacancy.url()}")
-                    print("-! * 50")
+                Vacancy.print_vacancies(all_vacancies)
 
         elif choice == "5":
             url = input("Введите URL вакансии для удаления: ").strip()
@@ -137,7 +123,8 @@ def user_interaction():
                 url=url,
                 salary=None,
                 description="",
-                employer=""
+                employer="",
+                published_at=""
             )
 
             if json_saver.delete_vacancy(vacancy_to_delete):
@@ -151,10 +138,7 @@ def user_interaction():
                 max_sal = float(input("Максимальная зарплата: ") or float('inf'))
                 filtered = json_saver.filter_by_salary_range(min_sal, max_sal)
                 print(f"Найдено {len(filtered)} вакансий в диапазоне {min_sal}–{max_sal}")
-                for i, vacancy in enumerate(filtered, 1):
-                    print(f"{i}. {vacancy.title()} ({vacancy.salary()})")
-                    print(f"{vacancy.url()}")
-                    print("-! * 50")
+                Vacancy.print_vacancies(filtered)
             except ValueError:
                 print("Некорректный формат зарплаты!")
 
@@ -169,10 +153,7 @@ def user_interaction():
                 print(f"Вакансий от {employer} не найдено.")
             else:
                 print(f"\nНайдено {len(results)} вакансий от {employer}:")
-                for i, vacancy in enumerate(results, 1):
-                    print(f"{i}. {vacancy.title()} ({vacancy.salary()})")
-                    print(f"{vacancy.url()}")
-                    print("-! * 50")
+                Vacancy.print_vacancies(results)
 
         elif choice == "8":
             print("До свидания!")
@@ -183,37 +164,37 @@ def user_interaction():
 
 
 if __name__ == "__main__":
-    # user_interaction()
+    user_interaction()
 
-    hh_api = HeadHunterAPI()
-    json_saver = JSONSaver()
-
-    query = "программист"
-
-    excluded_text ="1С"
-    per_page = 45
-    area_str = "Челябинск"
-    area_api = AreaAPI(area_str)
-    area_id = area_api.get_id_area()
-    print(area_id)
-
-    print(f"Ищем вакансии по запросу '{query}'...")
-    raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
-
-    if not raw_vacancies:
-        print("Вакансий не найдено.")
-
-    vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
-
-    for vacancy in vacancies:
-        json_saver._add_vacancy(vacancy)
-
-    print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
-
-    top_vacancies = json_saver.get_top_by_salary(10)
-    for i, vacancy in enumerate(top_vacancies, 1):
-        print(f"{i}. {vacancy.title()}")
-        print(f"Зарплата: {vacancy.salary()}")
-        print(f"Работодатель: {vacancy.employer()}")
-        print(f"Ссылка: {vacancy.url()}")
-        print("-! * 50")
+    # hh_api = HeadHunterAPI()
+    # json_saver = JSONSaver()
+    #
+    # query = "программист"
+    #
+    # excluded_text ="1С"
+    # per_page = 45
+    # area_str = "Челябинск"
+    # area_api = AreaAPI(area_str)
+    # area_id = area_api.get_id_area()
+    # print(area_id)
+    #
+    # print(f"Ищем вакансии по запросу '{query}'...")
+    # raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
+    #
+    # if not raw_vacancies:
+    #     print("Вакансий не найдено.")
+    #
+    # vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
+    #
+    # for vacancy in vacancies:
+    #     json_saver._add_vacancy(vacancy)
+    #
+    # print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
+    #
+    # top_vacancies = json_saver.get_top_by_salary(10)
+    # for i, vacancy in enumerate(top_vacancies, 1):
+    #     print(f"{i}. {vacancy.title()}")
+    #     print(f"Зарплата: {vacancy.salary()}")
+    #     print(f"Работодатель: {vacancy.employer()}")
+    #     print(f"Ссылка: {vacancy.url()}")
+    #     print("-! * 50")

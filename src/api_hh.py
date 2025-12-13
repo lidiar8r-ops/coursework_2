@@ -7,11 +7,11 @@ from src import app_logger
 from src.config import URL_HH
 
 # Настройка логирования
-logger = app_logger.get_logger("api_hh.log") #"api.log"
+logger = app_logger.get_logger("api_hh.log")
 
 
 class BaseAPI(ABC):
-    """# АБСТРАКТНЫЙ КЛАСС ДЛЯ РАБОТЫ С API"""
+    """ АБСТРАКТНЫЙ КЛАСС ДЛЯ РАБОТЫ С API"""
     @abstractmethod
     def get_vacancies(self, query: str, **kwargs) -> List[Dict[str, Any]]:
         """Получить данные по поисковому запросу"""
