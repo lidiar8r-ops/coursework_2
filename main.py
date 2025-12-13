@@ -2,8 +2,10 @@ from src.api_hh import HeadHunterAPI
 from src.vacancies import Vacancy
 from src.work_files import JSONSaver
 
-# ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ
+
 def user_interaction():
+    """ ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
+
     print("Добро пожаловать в систему поиска вакансий!")
     print("=" * 50)
 

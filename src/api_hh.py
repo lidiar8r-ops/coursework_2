@@ -32,12 +32,28 @@ class HeadHunterAPI(VacancyAPI):
         }
         try:
             response = self.session.get(self.BASE_URL, params=params)
-            response.raise_for_status()
-            data = response.json()
-            return data.get("items", [])
-        except requests.RequestException as e:
-            logger.error(f"Ошибка при запросе к API: {e}")
-            return []
-        except json.JSONDecodeError as e:
-            logger.error(f"Ошибка декодирования JSON: {e}")
-            return []
+
+            if response.status_code == 200:
+                return response.json().get("items", [])
+            elif response.status_code == 403:
+                logger.error(f"Необходимо пройти CAPTCHA для : {url}")
+                return None
+            elif response.status_code == 404:
+                logger.error(f"Указанная вакансия не существует или у пользователя нет прав для просмотра вакансии:"
+                                  f" {url}")
+                return None
+            elif response.status_code == 401:
+                logger.error("Неавторизованный запрос. Проверьте токен.")
+                return None
+            elif response.status_code == 429:
+                logger.error("Слишком много запросов запросов к API.")
+                return None
+            else:
+                logger.error(
+                    f"Ошибка {response.status_code}: {response.text}"
+                )
+                return None
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Ошибка сети: {e}")
+            return None

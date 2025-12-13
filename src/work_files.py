@@ -10,8 +10,8 @@ from src.vacancies import Vacancy
 logger = app_logger.get_logger("api.log")
 
 
-# АБСТРАКТНЫЙ КЛАСС ДЛЯ ХРАНЕНИЯ ВАКАНСИЙ
 class VacancyStorage(ABC):
+    """АБСТРАКТНЫЙ КЛАСС ДЛЯ ХРАНЕНИЯ ВАКАНСИЙ"""
     @abstractmethod
     def add_vacancy(self, vacancy: Vacancy) -> None:
         pass
