@@ -23,7 +23,7 @@ class HeadHunterAPI(VacancyAPI):
     def __init__(self):
         self.session = requests.Session()
 
-    def get_vacancies(self, query: str, area: int = 1, per_page: int = 20) -> List[Dict[str, Any]]:
+    def get_vacancies(self, query: str, area: int = 104, per_page: int = 20) -> List[Dict[str, Any]]:
         params = {
             "text": query,
             "area": area,
