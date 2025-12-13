@@ -38,7 +38,7 @@ def user_interaction():
                 print("Запрос не может быть пустым!")
                 continue
 
-            excluded_text = input("Введите слова исключения в запросе: ").strip()
+            excluded_text = input("Введите слова исключения в запросе (через запятую): ").strip()
 
             try:
                 per_page = int(input("Сколько вакансий загрузить (по умолчанию 20): ") or 20)
