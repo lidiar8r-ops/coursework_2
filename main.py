@@ -56,7 +56,7 @@ def user_interaction():
                 continue
             area_api = AreaAPI(area_str)
             area_id = area_api.get_id_area()
-            print(area_id)
+            # print(area_id)
 
 
             print(f"Ищем вакансии по запросу '{query}'...")
@@ -183,4 +183,37 @@ def user_interaction():
 
 
 if __name__ == "__main__":
-    user_interaction()
+    # user_interaction()
+
+    hh_api = HeadHunterAPI()
+    json_saver = JSONSaver()
+
+    query = "программист"
+
+    excluded_text ="1С"
+    per_page = 45
+    area_str = "Челябинск"
+    area_api = AreaAPI(area_str)
+    area_id = area_api.get_id_area()
+    print(area_id)
+
+    print(f"Ищем вакансии по запросу '{query}'...")
+    raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
+
+    if not raw_vacancies:
+        print("Вакансий не найдено.")
+
+    vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
+
+    for vacancy in vacancies:
+        json_saver._add_vacancy(vacancy)
+
+    print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
+
+    top_vacancies = json_saver.get_top_by_salary(10)
+    for i, vacancy in enumerate(top_vacancies, 1):
+        print(f"{i}. {vacancy.title()}")
+        print(f"Зарплата: {vacancy.salary()}")
+        print(f"Работодатель: {vacancy.employer()}")
+        print(f"Ссылка: {vacancy.url()}")
+        print("-! * 50")

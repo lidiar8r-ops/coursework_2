@@ -1,4 +1,5 @@
 import json
+import os
 
 from abc import ABC, abstractmethod
 from typing import List
@@ -15,7 +16,7 @@ logger = app_logger.get_logger("work_files.log")
 class VacancyStorage(ABC):
     """АБСТРАКТНЫЙ КЛАСС ДЛЯ ХРАНЕНИЯ ВАКАНСИЙ"""
     @abstractmethod
-    def add_vacancy(self, vacancy: Vacancy) -> None:
+    def _add_vacancy(self, vacancy: Vacancy) -> None:
         pass
 
     @abstractmethod
@@ -42,7 +43,73 @@ class JSONSaver(VacancyStorage):
         self.vacancies: List[Vacancy] = []
         self._load_data()
 
-    def _load_data(self):
+    # def _load_data(self):
+    #     try:
+    #         with open(self.filename, "r", encoding="utf-8") as f:
+    #             data = json.load(f)
+    #             self.vacancies = [
+    #                 Vacancy(
+    #                     title=item["title"],
+    #                     url=item["url"],
+    #                     salary=item["salary"],
+    #                     description=item["description"],
+    #                     employer=item["employer"],
+    #                     published_at=item["published_at"]
+    #                 ) for item in data
+    #             ]
+    #     except (FileNotFoundError, json.JSONDecodeError) as e:
+    #         logger.warning(f"Не удалось загрузить данные из {self.filename}: {e}")
+    #         self.vacancies = []
+    #
+    #
+    # def _save_data(self):
+    #     try:
+    #         with open(self.filename, "w", encoding="utf-8") as f:
+    #             json.dump(
+    #                 [vacancy.to_dict() for vacancy in self.vacancies],
+    #                 f,
+    #                 ensure_ascii=False,
+    #                 indent=4
+    #             )
+    #     except IOError as e:
+    #         logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")
+
+    def _add_vacancy(self, vacancy: Vacancy) -> bool:
+        if self._is_duplicate(vacancy.url()):
+            # print(f"Дубликат: вакансия с URL {vacancy.url()} уже существует.")
+            return False
+
+        self.vacancies.append(vacancy)
+        self.save()
+        print(f"Вакансия {vacancy.title()} добавлена.")
+        return True
+
+    def get_all(self) -> List[Vacancy]:
+        return self.vacancies
+
+    def clear(self) -> None:
+        self.vacancies = []
+        self.save()
+        print("Файл очищен.")
+
+    def save(self) -> None:
+        try:
+            with open(self.filename, "w", encoding="utf-8") as f:
+                json.dump(
+                    [v.to_dict() for v in self.vacancies],
+                    f,
+                    ensure_ascii=False,
+                    indent=4
+                )
+        except Exception as e:
+            print(f"Ошибка при записи в файл {self.filename}: {e}")
+            raise
+
+    def _load_data(self) -> None:
+        if not os.path.exists(self.filename):
+            self.vacancies = []
+            return
+
         try:
             with open(self.filename, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -54,28 +121,15 @@ class JSONSaver(VacancyStorage):
                         description=item["description"],
                         employer=item["employer"],
                         published_at=item["published_at"]
-                    ) for item in data
+                    )
+                    for item in data
                 ]
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logger.warning(f"Не удалось загрузить данные из {self.filename}: {e}")
+        except (json.JSONDecodeError, KeyError, TypeError) as e:
+            print(f"Ошибка при чтении файла {self.filename}: {e}")
             self.vacancies = []
 
-
-    def _save_data(self):
-        try:
-            with open(self.filename, "w", encoding="utf-8") as f:
-                json.dump(
-                    [vacancy.to_dict() for vacancy in self.vacancies],
-                    f,
-                    ensure_ascii=False,
-                    indent=4
-                )
-        except IOError as e:
-            logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")
-
-    def add_vacancy(self, vacancy: Vacancy) -> None:
-        self.vacancies.append(vacancy)
-        self._save_data()
+    def _is_duplicate(self, url: str) -> bool:
+        return any(v.url() == url for v in self.vacancies)
 
     def get_vacancies(self) -> List[Vacancy]:
         return self.vacancies
