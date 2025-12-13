@@ -52,7 +52,7 @@ class JSONSaver(VacancyStorage):
 
         self.vacancies.append(vacancy)
         self._save_data()
-        print(f"Вакансия {vacancy.title()} добавлена.")
+        # print(f"Вакансия {vacancy.title()} добавлена.")
         return True
 
 

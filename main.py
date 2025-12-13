@@ -9,6 +9,7 @@ from src.work_files import JSONSaver
 # Настройка логирования
 logger = app_logger.get_logger("main.log")
 
+
 def user_interaction():
     """ ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
 
@@ -73,11 +74,13 @@ def user_interaction():
 
             vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
 
+            count_add_vacansies = 0
             for vacancy in vacancies:
-                json_saver._add_vacancy(vacancy)
+                if json_saver._add_vacancy(vacancy):
+                    count_add_vacansies +=1
 
-            logger.info(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
-            print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
+            logger.info(f"Найдено {len(vacancies)} вакансий. Сохранены в файл {count_add_vacansies} новых вакансий")
+            print(f"Найдено {len(vacancies)} вакансий. Сохранены в файл {count_add_vacansies} новых вакансий")
 
         elif choice == "2":
             try:
