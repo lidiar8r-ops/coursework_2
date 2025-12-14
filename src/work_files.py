@@ -137,7 +137,6 @@ class JSONSaver(VacancyStorage):
         self._save_data()
         return True
 
-
     def get_all(self) -> List[Vacancy]:
         """
         Возвращает все вакансии из хранилища.
@@ -177,9 +176,7 @@ class JSONSaver(VacancyStorage):
         try:
             with open(self.filename, "r", encoding="utf-8") as file:
                 data = json.load(file)
-                self.vacancies = [
-                    Vacancy(**item) for item in data
-                ]  # Конструируем объект Vacancy из словаря
+                self.vacancies = [Vacancy(**item) for item in data]  # Конструируем объект Vacancy из словаря
         except (json.JSONDecodeError, KeyError, TypeError) as e:
             logger.error(f"Ошибка при чтении файла {self.filename}: {e}")
             self.vacancies = []
@@ -216,7 +213,7 @@ class JSONSaver(VacancyStorage):
             bool: True, если вакансия была успешно удалена, иначе False.
         """
         if all_del.lower() == "y" or all_del.lower() == "да" or all_del.lower() == "yes":
-            with open(self.filename, 'w', encoding='utf-8') as f:
+            with open(self.filename, "w", encoding="utf-8") as f:
                 self.vacancies: List[Vacancy] = []
                 return True  # ничего не записываем
         else:
@@ -239,8 +236,7 @@ class JSONSaver(VacancyStorage):
         """
         keyword_lower = keyword.lower()
         return [
-            v for v in self.vacancies
-            if keyword_lower in v.title().lower() or keyword_lower in v.description().lower()
+            v for v in self.vacancies if keyword_lower in v.title().lower() or keyword_lower in v.description().lower()
         ]
 
     def get_top_by_salary(self, n: int) -> List[Vacancy]:
@@ -280,10 +276,7 @@ class JSONSaver(VacancyStorage):
         Returns:
             List[Vacancy]: Соответствующие вакансии.
         """
-        return [
-            v for v in self.vacancies
-            if min_salary <= v.salary() <= max_salary
-        ]
+        return [v for v in self.vacancies if min_salary <= v.salary() <= max_salary]
 
     def filter_by_employer(self, employer: str) -> List[Vacancy]:
         """
@@ -296,7 +289,4 @@ class JSONSaver(VacancyStorage):
             List[Vacancy]: Вакансии указанного работодателя.
         """
         employer_lower = employer.lower()
-        return [
-            v for v in self.vacancies
-            if employer_lower in v.employer().lower()
-        ]
+        return [v for v in self.vacancies if employer_lower in v.employer().lower()]

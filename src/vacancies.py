@@ -101,7 +101,9 @@ class Vacancy:
             return 0.0
 
         # Ищем числа (возможно, с пробелами-разделителями тысяч)
-        numbers = re.findall(r'\b\d{1,3}(?:\s?\d{3})*\b', self._salary.replace("\u202f", ""))  # "\u202f" — неразрывный пробел
+        numbers = re.findall(
+            r"\b\d{1,3}(?:\s?\d{3})*\b", self._salary.replace("\u202f", "")
+        )  # "\u202f" — неразрывный пробел
         values = []
 
         for num_str in numbers:

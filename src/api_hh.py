@@ -95,7 +95,7 @@ class HeadHunterAPI(BaseAPI):
         self.session = requests.Session()
 
     def get_vacancies(
-            self, query: str, excluded_text: str, area: int = 104, per_page: int = 20
+        self, query: str, excluded_text: str, area: int = 104, per_page: int = 20
     ) -> List[Dict[str, Any]]:
         """
         Получает список вакансий по заданному запросу с фильтрацией и ограничением количества записей.
@@ -109,13 +109,7 @@ class HeadHunterAPI(BaseAPI):
         Returns:
             List[Dict[str, Any]]: Список вакансий в формате JSON.
         """
-        params = {
-            "text": query,
-            "excluded_text": excluded_text,
-            "area": area,
-            "per_page": per_page,
-            "page": 0
-        }
+        params = {"text": query, "excluded_text": excluded_text, "area": area, "per_page": per_page, "page": 0}
         data = self._request("vacancies", params)
         # Проверяем валидность полученных данных
         if not data or not isinstance(data, dict):

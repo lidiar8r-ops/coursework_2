@@ -62,8 +62,15 @@ class AreaAPI(BaseAPI):
             str: Идентификатор найденной области либо '0' (если область не найдена).
         """
         if not os.path.exists(self.filename):
-            data = self.get_vacancies()
-            if data is None:  # Если запрос к API не удался
+            try:
+                data = self.get_vacancies()
+                if data is None:  # Если запрос к API не удался
+                    return "0"
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Ошибка при запросе к API: {e}")
+                return "0"
+            except Exception as e:  # Другие неожиданные ошибки
+                logger.error(f"Неожиданная ошибка при запросе к API: {e}")
                 return "0"
         else:
             try:
@@ -74,8 +81,7 @@ class AreaAPI(BaseAPI):
                 return "0"  # Возвращаем '0' при любой ошибке чтения/декодирования
 
         area_id = self.find_area_id(data, self.area)
-        return str(area_id) if area_id != 0 else "0"
-
+        return area_id  # Уже строка, т.к. find_area_id возвращает str
 
     def get_vacancies(self, name: str = "") -> Optional[Dict[Any, Any]]:
         """
@@ -104,21 +110,50 @@ class AreaAPI(BaseAPI):
             id: Найденный ID области или 0, если регион не найден.
         """
 
-        areas = data
-        if not areas:
-            return 0
+        # areas = data
+        # if not areas:
+        #     return 0
+        #
+        # def search_in_areas(areas_list, name):
+        #     for area in areas_list:
+        #         if area["name"].strip().lower() == name.strip().lower():
+        #             return area["id"]
+        #         if "areas" in area and area["areas"]:
+        #             result = search_in_areas(area["areas"], name)
+        #             if result:
+        #                 return result
+        #     return 0
+        #
+        # return search_in_areas(areas, area_name)
 
-        def search_in_areas(areas_list, name):
-            for area in areas_list:
-                if area["name"].strip().lower() == name.strip().lower():
-                    return area["id"]
-                if "areas" in area and area["areas"]:
-                    result = search_in_areas(area["areas"], name)
-                    if result:
+        if not data or not isinstance(data, (dict, list)):
+            return "0"
+
+        target_name = area_name.strip().lower()
+
+        # Приводим data к списку, если это словарь
+        if isinstance(data, dict):
+            areas_list = [data]
+        else:
+            areas_list = data
+
+        def search_in_areas(areas):
+            for area in areas:
+                # 1. Проверяем имя текущего региона
+                current_name = area.get("name", "").strip().lower()
+                if current_name == target_name:
+                    area_id = area.get("id")
+                    return str(area_id) if area_id is not None else "0"
+
+                # 2. Проверяем вложенные регионы
+                sub_areas = area.get("areas")
+                if isinstance(sub_areas, list) and sub_areas:
+                    result = search_in_areas(sub_areas)
+                    if result != "0":
                         return result
-            return 0
+            return "0"
 
-        return search_in_areas(areas, area_name)
+        return search_in_areas(areas_list)
 
     def _save_data(self, data):
         """

@@ -1,14 +1,14 @@
 import os
-import os
-import pytest
 from pathlib import Path
+
+import pytest
 
 from src.api import AreaAPI
 from src.config import DATA_DIR
 
-
 # Константа с путём к данным
 # DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+
 
 @pytest.fixture(scope="session")
 def temp_filename():
@@ -18,6 +18,7 @@ def temp_filename():
     # Очистка после всех тестов
     if os.path.exists(filename):
         os.remove(filename)
+
 
 @pytest.fixture(autouse=True)
 def cleanup(temp_filename):
@@ -38,36 +39,12 @@ def area_api(temp_filename):
 @pytest.fixture
 def valid_areas_data():
     return [
-        {
-            "id": "1",
-            "name": "Москва",
-            "areas": [],
-            "parent_id": "113",
-            "utc_offset": "+03:00",
-            "lat": 55.749646,
-            "lng": 37.62368
-        },
-        {
-            "id": "2",
-            "name": "Санкт‑Петербург",
-            "areas": [],
-            "parent_id": "114",
-            "utc_offset": "+03:00",
-            "lat": 59.9398,
-            "lng": 30.3158
-        }
+        {"id": "1", "name": "Москва", "lat": 55.749646, "lng": 37.62368, "areas": []},
+        {"id": "2", "name": "Санкт‑Петербург", "lat": 59.9398, "lng": 30.3158, "areas": []},
+        {"id": "78", "name": "Ленинградская область", "lat": 60.0, "lng": 30.5, "areas": []},
     ]
 
 
-
 @pytest.fixture
-def invalid_json():\
+def invalid_json():
     return "Это не JSON!"
-#
-#
-#
-# # Очистка после тестов
-# @pytest.fixture(autouse=True)
-# def cleanup(temp_filename):
-#     yield
-#     remove_temp_file(temp_filename)
