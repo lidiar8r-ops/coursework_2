@@ -38,7 +38,7 @@ class VacancyStorage(ABC):
     """
 
     @abstractmethod
-    def _add_vacancy(self, vacancy: Vacancy) -> None:
+    def _add_vacancy(self, vacancy: Vacancy) -> bool:
         """
         Добавляет вакансию в хранилище.
 
@@ -119,7 +119,7 @@ class JSONSaver(VacancyStorage):
         self.vacancies: List[Vacancy] = []  # Здесь хранятся объекты вакансий
         self._load_data()  # Загружаем существующие данные из файла
 
-    def _add_vacancy(self, vacancy: Vacancy) -> None:
+    def _add_vacancy(self, vacancy: Vacancy) -> bool:
         """
         Добавляет вакансию в хранилище, если она ещё не существует.
 
@@ -128,10 +128,11 @@ class JSONSaver(VacancyStorage):
         """
         if self._is_duplicate(vacancy.url()):
             logger.info(f"Дубликат: вакансия с URL {vacancy.url()} уже существует.")
-            return
+            return False
 
         self.vacancies.append(vacancy)
         self._save_data()
+        return True
 
     def get_all(self) -> List[Vacancy]:
         """

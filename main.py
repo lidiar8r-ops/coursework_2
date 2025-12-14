@@ -9,9 +9,42 @@ from src.work_files import JSONSaver
 logger = app_logger.get_logger("main.log")
 
 
-def user_interaction():
-    """ФУНКЦИЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ"""
+def user_interaction() -> None:
+    """
+    Функция взаимодействия с пользователем через консольный интерфейс.
 
+    Предоставляет меню для:
+    - поиска вакансий на hh.ru;
+    - просмотра топа вакансий по зарплате;
+    - поиска по ключевым словам, диапазону зарплат, работодателю;
+    - управления сохранёнными вакансиями (просмотр, удаление).
+
+    Циклически отображает меню до выбора пункта «Выход» (9).
+    Все действия логируются через logger.
+
+    Поведение:
+    1. Выводит приветственное сообщение и меню.
+    2. Ожидает ввода номера действия от пользователя (1–9).
+    3. В зависимости от выбора:
+       - запрашивает дополнительные параметры (запрос, диапазон зарплат и т. п.);
+       - выполняет соответствующую операцию через API и савер;
+       - выводит результат или сообщение об ошибке.
+    4. При выборе «9» завершает работу.
+
+    Обработка ошибок:
+    - некорректный ввод чисел (ValueError);
+    - пустые обязательные поля;
+    - отсутствие результатов поиска;
+    - ошибки API и сохранения.
+
+    Логирование:
+    - начало/конец работы;
+    - выполнение ключевых действий;
+    - ошибки и предупреждения.
+
+    Returns:
+        None: Функция выполняет интерактивное взаимодействие, не возвращает значение.
+    """
     logger.info("Начало работы программы")
     print("Добро пожаловать в систему поиска вакансий!")
     print("=" * 50)
@@ -118,7 +151,7 @@ def user_interaction():
                 Vacancy.print_vacancies(results)
 
         elif choice == "4":
-            all_vacancies = json_saver.get_request()
+            all_vacancies = json_saver.get_vacancies()
             if not all_vacancies:
                 logger.info("Нет сохранённых вакансий.")
                 print("Нет сохранённых вакансий.")
@@ -133,7 +166,7 @@ def user_interaction():
                 print("URL не может быть пустым!")
                 continue
 
-            vacancy_to_delete = Vacancy(title="", url=url, salary=None, description="", employer="", published_at="")
+            vacancy_to_delete = Vacancy(title="", url=url, salary="", description="", employer="", published_at="")
 
             if json_saver.delete_vacancy(vacancy_to_delete):
                 logger.info("Вакансия удалена.")
@@ -174,7 +207,7 @@ def user_interaction():
 
             str_del = input("Удалить все вакансии? ").strip()
             if json_saver.delete_vacancy(
-                Vacancy(title="", url=URL_HH, salary=None, description="", employer="", published_at=""), str_del
+                Vacancy(title="", url=URL_HH, salary="", description="", employer="", published_at=""), str_del
             ):
                 logger.info("Все вакансии удалены")
                 print("Все вакансии удалены")

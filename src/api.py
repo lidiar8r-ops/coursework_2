@@ -8,7 +8,7 @@ import json  # Для сериализации и десериализации �
 import os  # Работа с операционной системой, доступ к файловым операциям
 
 # Внешние зависимости
-from typing import Any, Dict, Optional  # Типовые подсказки для улучшения качества типов переменных
+from typing import Any, Dict, List, Union  # Типовые подсказки для улучшения качества типов переменных
 
 import requests  # Библиотека для отправки HTTP-запросов (используется для подключения к API hh.ru)
 
@@ -62,7 +62,7 @@ class AreaAPI(BaseAPI):
         """
         if not os.path.exists(self.filename):
             try:
-                data = self.get_requests()
+                data = self.get_requests("")
                 if data is None:
                     return "0"
             except requests.exceptions.RequestException as e:
@@ -90,89 +90,113 @@ class AreaAPI(BaseAPI):
             # Если area_id не строка (например, int), преобразуем
             return str(area_id)
 
-
-
-    def get_requests(self, query: str) -> Optional[Dict[Any, Any]]:
+    def get_requests(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
         """
-        Запрашивает регионы с сайта hh.ru и возвращает данные в формате JSON.
+        Получает данные по поисковому запросу.
 
         Args:
-            name (str, optional): Не используется в данном методе, оставлен для совместимости с родительским классом.
+            query (str): Поисковый запрос.
+            **kwargs (Any): Дополнительные параметры API (не используются в текущей реализации).
 
         Returns:
-            Optional[Dict[Any, Any]]: Данные областей в формате JSON или None в случае ошибок.
+            List[Dict[str, Any]]: Список данных в формате API.
         """
-        params = {}  # Параметры запроса (пустые, поскольку нам нужны все доступные регионы)
-        data = self._request("areas", params)  # Запрос к API hh.ru
-        self._save_data(data)  # Сохраняем данные в файл
-        return data
+        try:
+            # Запрос к API для получения регионов (как в вашей текущей логике)
+            params: Dict[str, Any] = {}
+            data = self._request("areas", params)
+            self._save_data(data)
 
-    def find_area_id(self, data: Dict, area_name: str) -> int:
+            # Преобразуем ответ в требуемый формат (список словарей)
+            if isinstance(data, dict):
+                return [data]  # Обернуть словарь в список
+            elif isinstance(data, list):
+                return data
+            else:
+                logger.warning("Некорректный формат ответа API: %s", data)
+                return []
+
+        except Exception as e:
+            logger.error("Ошибка при запросе данных: %s", e)
+            return []
+
+    # def find_area_id(self, data: List[Dict[str, Any]], area_name: str) -> str:
+    def find_area_id(
+        self, data: Union[List[Dict[str, Any]], Dict[str, Any]], target_name: str  # список или словарь
+    ) -> str:
         """
         Рекурсивно ищет ID области по её названию среди списка областей.
 
         Args:
-            data (Dict): Структура данных с областями, полученная с hh.ru.
-            area_name (str): Название искомого региона или города.
+            data: Список словарей с данными о регионах. Каждый словарь может содержать:
+                - "name": название региона (str)
+                - "id": идентификатор региона (int/str)
+                - "areas": вложенные регионы (list of dict)
+            area_name: Название искомого региона или города.
 
         Returns:
-            id: Найденный ID области или 0, если регион не найден.
+            str: Найденный ID региона в виде строки или "0", если регион не найден.
         """
-
-        # areas = data
-        # if not areas:
-        #     return 0
+        # if not data:
+        #     return "0"
         #
-        # def search_in_areas(areas_list, name):
-        #     for area in areas_list:
-        #         if area["name"].strip().lower() == name.strip().lower():
-        #             return area["id"]
-        #         if "areas" in area and area["areas"]:
-        #             result = search_in_areas(area["areas"], name)
-        #             if result:
+        # target_name = area_name.strip().lower()
+        #
+        # def search_in_areas(areas: List[Dict[str, Any]]) -> str:
+        #     for area in areas:
+        #         # 1. Проверяем имя текущего региона
+        #         current_name = area.get("name", "").strip().lower()
+        #         if current_name == target_name:
+        #             area_id = area.get("id")
+        #             return str(area_id) if area_id is not None else "0"
+        #
+        #         # 2. Проверяем вложенные регионы
+        #         sub_areas = area.get("areas")
+        #         if isinstance(sub_areas, list) and sub_areas:
+        #             result = search_in_areas(sub_areas)
+        #             if result != "0":
         #                 return result
-        #     return 0
+        #     return "0"
         #
-        # return search_in_areas(areas, area_name)
+        # return search_in_areas(data)
+        target_name = target_name.strip().lower()
 
-        if not data or not isinstance(data, (dict, list)):
+        if isinstance(data, dict):
+            data = [data]
+        if not isinstance(data, list):
+            logger.warning("Некорректный тип данных: %s", type(data))
             return "0"
 
-        target_name = area_name.strip().lower()
-
-        # Приводим data к списку, если это словарь
-        if isinstance(data, dict):
-            areas_list = [data]
-        else:
-            areas_list = data
-
-        def search_in_areas(areas):
+        def search_in_areas(areas: List[Dict[str, Any]]) -> str:
             for area in areas:
-                # 1. Проверяем имя текущего региона
                 current_name = area.get("name", "").strip().lower()
                 if current_name == target_name:
-                    area_id = area.get("id")
-                    return str(area_id) if area_id is not None else "0"
-
-                # 2. Проверяем вложенные регионы
-                sub_areas = area.get("areas")
-                if isinstance(sub_areas, list) and sub_areas:
-                    result = search_in_areas(sub_areas)
+                    # Явно приводим к str
+                    return str(area.get("id", "0"))
+                if "areas" in area:
+                    result = search_in_areas(area["areas"])
                     if result != "0":
                         return result
             return "0"
 
-        return search_in_areas(areas_list)
+        return search_in_areas(data)
 
-    def _save_data(self, data):
+    def _save_data(self, data: Any) -> None:
         """
-        Сохраняет переданные данные в указанный файл `filename`.
+        Сохраняет переданные данные в указанный файл `self.filename` в формате JSON.
 
         Args:
-            data: Данные для записи в файл.
+            data (Any): Данные для записи в файл. Должны быть сериализуемы в JSON
+                (например: dict, list, str, int, bool, None).
+
+        Raises:
+            IOError: Если произошла ошибка при работе с файлом (нет прав, диск полон и т.п.).
+        Returns:
+            None: Метод не возвращает значение, только выполняет запись в файл.
         """
         try:
             with open(self.filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
         except IOError as e:
             logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")
+            raise

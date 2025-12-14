@@ -45,7 +45,7 @@ def test_get_id_area_network_error(area_api, temp_filename):
 
     assert area_id == "0"
     assert mock_log.called
-    assert "Network error" in str(mock_log.call_args[0][0])
+    assert "Ошибка при запросе данных: %s" in str(mock_log.call_args[0][0])
 
 
 def test_find_area_id_nested_success(area_api, valid_areas_data):
@@ -70,11 +70,28 @@ def test_save_data_success(area_api, temp_filename, valid_areas_data):
     assert saved_data == valid_areas_data
 
 
+# def test_save_data_io_error(area_api, temp_filename):
+#     with patch("builtins.open", side_effect=IOError("Permission denied")):
+#         with patch("src.api.logger.error") as mock_log:
+#             area_api._save_data({"data": "test"})
+#     assert mock_log.call_count >= 1
+
+
 def test_save_data_io_error(area_api, temp_filename):
     with patch("builtins.open", side_effect=IOError("Permission denied")):
         with patch("src.api.logger.error") as mock_log:
-            area_api._save_data({"data": "test"})
-    assert mock_log.call_count >= 1
+            # Явно перехватываем исключение, которое пробрасывает _save_data
+            with pytest.raises(IOError) as exc_info:
+                area_api._save_data({"data": "test"})
+
+            # Проверяем, что логгер был вызван
+            assert mock_log.called
+
+            # Проверяем сообщение в логе
+            log_message = mock_log.call_args[0][0]  # Это f-строка из logger.error
+            assert "Ошибка при сохранении в файл" in log_message
+            assert temp_filename in log_message
+            assert "Permission denied" in str(exc_info.value)  # Проверяем текст исключения
 
 
 @pytest.mark.parametrize(
