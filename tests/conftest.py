@@ -1,65 +1,56 @@
-import pandas as pd
+import os
+
 import pytest
 
+from src.api import AreaAPI
+from src.config import DATA_DIR
 
-@pytest.fixture(scope="module")
-def test_transactions():
-    return pd.DataFrame(
+
+# Фикстуры
+
+@pytest.fixture(scope="session")
+def temp_filename():
+    """Имя временного файла в директории data."""
+    return os.path.join(DATA_DIR, "test_areas.json")
+
+@pytest.fixture
+def area_api(temp_filename):
+    return AreaAPI(area="Москва", filename=str(temp_filename))
+
+
+# Тестовые данные
+@pytest.fixture
+def valid_areas_data():
+    return {
+    "areas": [
         {
-            "Дата платежа": pd.to_datetime(["2023-09-01", "2023-09-02"]),
-            "Сумма платежа": [-100, -200],
-            "Сумма платежа_RUB": [-100, -200],
-            "Валюта платежа": ["RUB", "RUB"],
+            "id": "1",
+            "name": "Москва",
+            "areas": []
+        },
+        {
+            "id": "2",
+            "name": "Санкт‑Петербург",
+            "areas": [
+                {
+                    "id": "78",
+                    "name": "Ленинградская область",
+                    "areas": []
+                }
+            ]
         }
-    )
+    ]
+}
 
 
 @pytest.fixture
-def faulty_data():
-    return pd.DataFrame(
-        {
-            "Дата платежа": ["2025-33-01", "2025-01-02"],
-            "Кэшбэк": [100, 200],
-            "Категория": ["Продукты", "\udcff"],  # Некорректное значение (нечитаемый символ)
-        }
-    )
+def invalid_json():\
+    return "Это не JSON!"
 
 
-@pytest.fixture(scope="module")
-def positive_test_transactions():
-    return pd.DataFrame(
-        {
-            "Дата платежа": pd.to_datetime(["2023-09-01"]),
-            "Сумма платежа": [-100],
-            "Сумма платежа_RUB": [-100],
-            "Валюта платежа": ["RUB"],
-        }
-    )
 
-
-@pytest.fixture
-def sample_transactions():
-    return pd.DataFrame(
-        {
-            "Дата платежа": ["01.09.2025"],
-            "Сумма платежа": [-1000],
-            "Сумма платежа_RUB": [-1000],
-            "Валюта платежа": ["USD"],
-            "Кэшбэк": [100],
-            "Категория": ["Продукты"],
-        }
-    )
-
-
-@pytest.fixture
-def sample_data():
-    """Фикстура: тестовые данные."""
-    return pd.DataFrame(
-        {
-            "Дата платежа": ["01.01.2025", "15.01.2025", "05.02.2025", "10.01.2025", "20.01.2025"],
-            "Кэшбэк": [100.5, 200.3, 0, 50.2, 300.0],
-            "Категория": ["Продукты", "Развлечения", "Транспорт", "Продукты", "Одежда"],
-            "Сумма платежа": [-100, -200, -300, -501, -123],
-            "Валюта платежа": ["USD", "RUB", "RUB", "USD", "EUR"],
-        }
-    )
+# Очистка после тестов
+@pytest.fixture(autouse=True)
+def cleanup(temp_filename):
+    yield
+    remove_temp_file(temp_filename)
