@@ -63,12 +63,19 @@ class AreaAPI(BaseAPI):
         """
         if not os.path.exists(self.filename):
             data = self.get_vacancies()
+            if data is None:  # Если запрос к API не удался
+                return "0"
         else:
-            with open(self.filename, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            try:
+                with open(self.filename, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                logger.error(f"Ошибка при чтении файла {self.filename}: {e}")
+                return "0"  # Возвращаем '0' при любой ошибке чтения/декодирования
 
         area_id = self.find_area_id(data, self.area)
-        return area_id
+        return str(area_id) if area_id != 0 else "0"
+
 
     def get_vacancies(self, name: str = "") -> Optional[Dict[Any, Any]]:
         """
