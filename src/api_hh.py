@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -25,54 +25,63 @@ class BaseAPI(ABC):
             Обеспечивает выполнение HTTP-запросов к API.
     """
 
-    @abstractmethod
-    def get_vacancies(self, query: str, **kwargs) -> List[Dict[str, Any]]:
+    def __init__(self) -> None:
+        """Инициализирует HTTP‑сессию для запросов к API."""
+        self.session: requests.Session = requests.Session()
+
+    @abstractmethod  # pragma: no cover
+    def get_requests(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
         """
-        Абстрактный метод для получения списка вакансий по заданному поисковому запросу.
+        Абстрактный метод для получения данных по заданному поисковому запросу.
 
         Args:
             query (str): Основное ключевое слово или фраза для поиска вакансий.
-            **kwargs: Дополнительные аргументы для фильтрации результата (например, регион поиска).
+            **kwargs (Any): Дополнительные аргументы для фильтрации результата
+                (например, регион поиска, зарплата, опыт).
 
         Returns:
-            List[Dict[str, Any]]: Список вакансий в формате JSON-дикт.
+            List[Dict[str, Any]]: Список вакансий в формате JSON-дикт. Каждый элемент
+                содержит поля, специфичные для источника данных.
         """
         pass
 
-    def _request(self, endpoint: str, params: dict) -> Dict[Any, Any]:
+    def _request(self, endpoint: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Выполняет HTTP-запросы к API сервиса.
 
         Args:
-            endpoint (str): Часть URL, определяющая точку доступа к данным (например, 'vacancies').
-            params (dict): Словарь параметров для передачи в запросе.
+            endpoint (str): Часть URL (например, 'vacancies').
+            params (Dict[str, Any]): Параметры запроса.
 
         Returns:
-            Dict[Any, Any]: JSON-ответ от API.
+            Optional[Dict[str, Any]]: JSON-ответ или None при ошибке.
         """
         self.url = f"{URL_HH}/{endpoint}"
         try:
             response = self.session.get(self.url, params=params)
-
             if response.status_code == 200:
-                return response.json()
+                data = response.json()
+                if isinstance(data, dict):
+                    return data
+                else:
+                    logger.error("Ответ API не является словарём")
+                    return None
+                # except json.JSONDecodeError:
+                #     logger.error("Не удалось декодировать JSON")
+                #     return None
+
             elif response.status_code == 403:
-                logger.error(f"Необходимо пройти CAPTCHA для : {self.url}")
-                return None
+                logger.error(f"Необходимо пройти CAPTCHA: {self.url}")
             elif response.status_code == 404:
-                logger.error(
-                    f"Указанная вакансия не существует или у пользователя нет прав для просмотра вакансии: {self.url}"
-                )
-                return None
+                logger.error(f"Ресурс не найден: {self.url}")
             elif response.status_code == 401:
                 logger.error("Неавторизованный запрос. Проверьте токен.")
-                return None
             elif response.status_code == 429:
-                logger.error("Слишком много запросов к API.")
-                return None
+                logger.error("Превышен лимит запросов к API.")
             else:
-                logger.error(f"Ошибка {response.status_code}: {response.text}")
-                return None
+                logger.error(f"HTTP {response.status_code}: {response.text}")
+
+            return None
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Ошибка сети: {e}")
@@ -88,15 +97,23 @@ class HeadHunterAPI(BaseAPI):
             Получает список вакансий по запросу с возможностью исключения определенных ключевых слов.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Конструктор класса, создает сессию для HTTP-запросов.
         """
         self.session = requests.Session()
 
-    def get_vacancies(
-        self, query: str, excluded_text: str, area: int = 104, per_page: int = 20
-    ) -> List[Dict[str, Any]]:
+    def _parse_items(self, data: Any) -> List[Dict[str, Any]]:
+        """Безопасно извлекает items из ответа API."""
+        if not isinstance(data, dict):
+            return []
+
+        items = data.get("items", [])
+        if isinstance(items, list) and all(isinstance(item, dict) for item in items):
+            return items
+        return []
+
+    def get_requests(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
         """
         Получает список вакансий по заданному запросу с фильтрацией и ограничением количества записей.
 
@@ -109,12 +126,13 @@ class HeadHunterAPI(BaseAPI):
         Returns:
             List[Dict[str, Any]]: Список вакансий в формате JSON.
         """
-        params = {"text": query, "excluded_text": excluded_text, "area": area, "per_page": per_page, "page": 0}
-        data = self._request("vacancies", params)
-        # Проверяем валидность полученных данных
-        if not data or not isinstance(data, dict):
-            logger.warning("Получен пустой или невалидный ответ от API: %s", data)
-            return []
+        params = {
+            "text": query,
+            "excluded_text": kwargs.get("excluded_text", ""),
+            "area": kwargs.get("area", 104),
+            "per_page": kwargs.get("per_page", 20),
+            "page": 0,
+        }
 
-        data_query = data.get("items", [])
-        return data_query
+        data = self._request("vacancies", params)
+        return self._parse_items(data)

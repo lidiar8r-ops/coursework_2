@@ -119,23 +119,19 @@ class JSONSaver(VacancyStorage):
         self.vacancies: List[Vacancy] = []  # Здесь хранятся объекты вакансий
         self._load_data()  # Загружаем существующие данные из файла
 
-    def _add_vacancy(self, vacancy: Vacancy) -> bool:
+    def _add_vacancy(self, vacancy: Vacancy) -> None:
         """
         Добавляет вакансию в хранилище, если она ещё не существует.
 
         Args:
             vacancy (Vacancy): Вакансия для добавления.
-
-        Returns:
-            bool: True, если вакансия добавлена успешно, иначе False.
         """
         if self._is_duplicate(vacancy.url()):
             logger.info(f"Дубликат: вакансия с URL {vacancy.url()} уже существует.")
-            return False
+            return
 
         self.vacancies.append(vacancy)
         self._save_data()
-        return True
 
     def get_all(self) -> List[Vacancy]:
         """
@@ -202,27 +198,30 @@ class JSONSaver(VacancyStorage):
         """
         return self.vacancies
 
-    def delete_vacancy(self, vacancy: Vacancy, all_del="нет") -> bool:
+    def delete_vacancy(self, vacancy: Vacancy, all_del: str = "нет") -> bool:
         """
         Удаляет вакансию из хранилища.
 
         Args:
             vacancy (Vacancy): Вакансия для удаления.
+            all_del (str): Флаг полного удаления. Допустимые значения:
+                "y", "да", "yes" — удалить всё;
+                любое другое значение — удалить конкретную вакансию.
 
         Returns:
-            bool: True, если вакансия была успешно удалена, иначе False.
+            bool: True при успешном удалении, False если вакансия не найдена.
         """
-        if all_del.lower() == "y" or all_del.lower() == "да" or all_del.lower() == "yes":
-            with open(self.filename, "w", encoding="utf-8") as f:
-                self.vacancies: List[Vacancy] = []
-                return True  # ничего не записываем
-        else:
-            for index, current_vacancy in enumerate(self.vacancies):
-                if current_vacancy.url() == vacancy.url():
-                    del self.vacancies[index]
-                    self._save_data()
-                    return True
-            return False
+        if all_del.lower() in ("y", "да", "yes"):
+            with open(self.filename, "w", encoding="utf-8"):
+                self.vacancies = []
+            return True
+
+        for index, current_vacancy in enumerate(self.vacancies):
+            if current_vacancy.url() == vacancy.url():
+                del self.vacancies[index]
+                self._save_data()
+                return True
+        return False
 
     def filter_by_keyword(self, keyword: str) -> List[Vacancy]:
         """
@@ -276,7 +275,20 @@ class JSONSaver(VacancyStorage):
         Returns:
             List[Vacancy]: Соответствующие вакансии.
         """
-        return [v for v in self.vacancies if min_salary <= v.salary() <= max_salary]
+
+        def parse_salary(salary_str: str) -> float | None:
+            try:
+                # Удаляем пробелы и прочие разделители
+                cleaned = salary_str.replace(" ", "").replace(" ", "").replace(",", "")
+                return float(cleaned)
+            except (ValueError, AttributeError):
+                return None
+
+        return [
+            v
+            for v in self.vacancies
+            if (salary := parse_salary(v.salary())) is not None and min_salary <= salary <= max_salary
+        ]
 
     def filter_by_employer(self, employer: str) -> List[Vacancy]:
         """

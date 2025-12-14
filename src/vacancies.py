@@ -179,7 +179,7 @@ class Vacancy:
             Vacancy: Новый объект Vacancy.
         """
         salary_info = item.get("salary")
-        salary_str = None
+        salary_str = ""
 
         if salary_info:
             salary_from = salary_info.get("from")
@@ -209,7 +209,9 @@ class Vacancy:
     def __le__(self, other: "Vacancy") -> bool:
         return self.get_salary_value() <= other.get_salary_value()
 
-    def __eq__(self, other: "Vacancy") -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
         return self.get_salary_value() == other.get_salary_value()
 
     # Строковое представление

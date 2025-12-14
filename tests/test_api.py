@@ -33,7 +33,7 @@ def test_get_id_area_from_file_success(area_api, temp_filename, valid_areas_data
 def test_get_id_area_file_invalid_json(area_api, temp_filename):
     with open(temp_filename, "w", encoding="utf-8") as f:
         f.write("Это не JSON!")
-    with patch.object(area_api, "get_vacancies", return_value=None):
+    with patch.object(area_api, "get_requests", return_value=None):
         assert area_api.get_id_area() == "0"
 
 
@@ -145,7 +145,7 @@ def test_get_id_area_handles_none_from_api():
 
     api = AreaAPI(area="Москва", filename="dummy.json")
 
-    with patch.object(api, "get_vacancies", return_value=None):
+    with patch.object(api, "get_requests", return_value=None):
         result = api.get_id_area()
 
     assert result == "0", f"Ожидался '0', но получено {result}"
@@ -155,7 +155,7 @@ def test_get_id_area_handles_unexpected_exception():
     api = AreaAPI(area="Москва", filename="temp_nonexistent.json")
 
     with patch("src.api.logger.error") as mock_logger:  # Заглушаем и контролируем
-        with patch.object(api, "get_vacancies", side_effect=ValueError("Искусственная ошибка")):
+        with patch.object(api, "get_requests", side_effect=ValueError("Искусственная ошибка")):
             result = api.get_id_area()
 
     # Проверяем, что logger.error был вызван ровно 1 раз

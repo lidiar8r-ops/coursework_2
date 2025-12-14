@@ -63,7 +63,11 @@ def user_interaction():
             logger.info(f"Ищем вакансии по запросу '{query}'...")
             print(f"Ищем вакансии по запросу '{query}'...")
             # print(query, excluded_text,area_id,per_page)
-            raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
+            # raw_vacancies = hh_api.get_request(query, excluded_text, area=area_id, per_page=per_page)
+
+            raw_vacancies = hh_api.get_requests(
+                query=query, excluded_text=excluded_text, area=area_id, per_page=per_page
+            )
 
             if not raw_vacancies:
                 logger.info("Вакансий не найдено.")
@@ -114,7 +118,7 @@ def user_interaction():
                 Vacancy.print_vacancies(results)
 
         elif choice == "4":
-            all_vacancies = json_saver.get_vacancies()
+            all_vacancies = json_saver.get_request()
             if not all_vacancies:
                 logger.info("Нет сохранённых вакансий.")
                 print("Нет сохранённых вакансий.")
@@ -196,29 +200,29 @@ if __name__ == "__main__":
     query = "программист"
 
     excluded_text = "1С"
-    per_page = 45
+    per_page = 1
     area_str = "Челябинск"
     area_api = AreaAPI(area_str)
     area_id = area_api.get_id_area()
     print(area_id)
 
-    # print(f"Ищем вакансии по запросу '{query}'...")
-    # raw_vacancies = hh_api.get_vacancies(query, excluded_text, area=area_id, per_page=per_page)
-    #
-    # if not raw_vacancies:
-    #     print("Вакансий не найдено.")
-    #
-    # vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
-    #
-    # for vacancy in vacancies:
-    #     json_saver._add_vacancy(vacancy)
-    #
-    # print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
-    #
-    # top_vacancies = json_saver.get_top_by_salary(10)
-    # for i, vacancy in enumerate(top_vacancies, 1):
-    #     print(f"{i}. {vacancy.title()}")
-    #     print(f"Зарплата: {vacancy.salary()}")
-    #     print(f"Работодатель: {vacancy.employer()}")
-    #     print(f"Ссылка: {vacancy.url()}")
-    #     print("-! * 50")
+    print(f"Ищем вакансии по запросу '{query}'...")
+    # raw_vacancies = hh_api.get_request(query, excluded_text, area=area_id, per_page=per_page)
+    raw_vacancies = hh_api.get_requests(query=query, excluded_text=excluded_text, area=area_id, per_page=per_page)
+    if not raw_vacancies:
+        print("Вакансий не найдено.")
+
+    vacancies = [Vacancy.from_hh_api(item) for item in raw_vacancies]
+
+    for vacancy in vacancies:
+        json_saver._add_vacancy(vacancy)
+
+    print(f"Найдено {len(vacancies)} вакансий. Они сохранены в файл.")
+
+    top_vacancies = json_saver.get_top_by_salary(10)
+    for i, vacancy in enumerate(top_vacancies, 1):
+        print(f"{i}. {vacancy.title()}")
+        print(f"Зарплата: {vacancy.salary()}")
+        print(f"Работодатель: {vacancy.employer()}")
+        print(f"Ссылка: {vacancy.url()}")
+        print("-! * 50")
