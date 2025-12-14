@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.13"
 openpyxl = "^3.1.5"
 requests = "^2.32.5"
+python-dotenv = "^1.2.1"
 
 
 [tool.poetry.group.types.dependencies]

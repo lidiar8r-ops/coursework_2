@@ -61,14 +61,31 @@ class AreaAPI(BaseAPI):
         Returns:
             str: Идентификатор найденной области либо '0' (если область не найдена).
         """
-        if not os.path.exists(self.filename):
-            data = self.get_vacancies()
-        else:
-            with open(self.filename, "r", encoding="utf-8") as f:
-                data = json.load(f)
+        # if not os.path.exists(self.filename):
+        #     data = self.get_vacancies()
+        # else:
+        #     with open(self.filename, "r", encoding="utf-8") as f:
+        #         data = json.load(f)
+        #
+        # area_id = self.find_area_id(data, self.area)
+        # return area_id
 
-        area_id = self.find_area_id(data, self.area)
-        return area_id
+        if os.path.exists(self.filename):
+            try:
+                with open(self.filename, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except json.JSONDecodeError as e:
+                logger.error(f"Невалидный JSON в файле {self.filename}: {e}")
+                data = None
+        else:
+            data = None
+
+        if data is None:
+            # Делаем запрос к API
+            data = self._request()
+            self._save_data(data)
+
+        return self.find_area_id(data, self.area)
 
     def get_vacancies(self, name: str = "") -> Optional[Dict[Any, Any]]:
         """
@@ -102,7 +119,12 @@ class AreaAPI(BaseAPI):
             return 0
 
         def search_in_areas(areas_list, name):
+            if not isinstance(areas_list, list):
+                return 0  # или raise ValueError
+
             for area in areas_list:
+                if not isinstance(area, dict):
+                    continue  # пропускаем не-словари
                 if area["name"].strip().lower() == name.strip().lower():
                     return area["id"]
                 if "areas" in area and area["areas"]:
@@ -112,6 +134,8 @@ class AreaAPI(BaseAPI):
             return 0
 
         return search_in_areas(areas, area_name)
+
+
 
     def _save_data(self, data):
         """
@@ -123,5 +147,8 @@ class AreaAPI(BaseAPI):
         try:
             with open(self.filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
+            logger.info(f"Данные сохранены в {self.filename}")
+        except TypeError as e:
+            logger.error(f"Объект не сериализуется в JSON: {e}")
         except IOError as e:
-            logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")
+            logger.error(f"Ошибка записи в файл {self.filename}: {e}")
