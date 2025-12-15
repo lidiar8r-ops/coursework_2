@@ -370,7 +370,8 @@ filename_areas = "areas.json"
 
 
 ## Тестирование
-Код покрыт тестами Coverage report: %
+Код покрыт тестами Coverage report: 89%
+
 
 HTML-отчёт, который показывает, какие строки кода были покрыты тестами, а какие нет в 
 [(htmlcov/index.html)](https://github.com/lidiar8r-ops/coursework_2/blob/Feature/coursework_2/htmlcov/index.html)
