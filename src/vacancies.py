@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 # Настройка логирования
@@ -11,45 +11,57 @@ class Vacancy:
     """
     Представляет собой одну вакансию с основными атрибутами и методами для работы с ними.
 
-    Основные атрибуты:
+    Атрибуты:
         title (str): Название вакансии.
         url (str): Адрес страницы вакансии.
-        salary (str): Зарплата (может содержать диапазон или фиксированное значение).
+        salary (str): Информация о зарплате (может содержать диапазон, префиксы «от/до»).
         description (str): Краткое описание вакансии.
-        employer (str): Работодатель.
+        employer (str): Название работодателя.
         published_at (str): Дата публикации вакансии.
 
-    Методы:
+
+    Основные возможности:
+        - Валидация входных данных (URL, обязательные поля).
+        - Извлечение числового значения зарплаты для сортировки.
+        - Сериализация в словарь (to_dict).
+        - Сравнение вакансий по зарплате (>, <, == и др.).
+        - Создание экземпляра из ответа API hh.ru (from_hh_api).
+        - Удобное строковое представление (str, repr).
+        Методы:
         get_salary_value() -> float: Возвращает численное значение зарплаты для сортировки.
         to_dict() -> Dict[str, Any]: Преобразует объект в словарь для дальнейшей сериализации.
         from_hh_api(item: Dict[str, Any]) -> Vacancy: Создает объект Vacancy из ответа API hh.ru.
         print_vacancies(vacancies: List['Vacancy']): Печать информации о списке вакансий.
     """
 
+    __slots__ = ["_title", "_url", "_salary", "_description", "_employer", "_published_at"]
+
     def __init__(self, title: str, url: str, salary: str, description: str, employer: str, published_at: str):
         """
-        Конструктор класса Vacancy.
+        Инициализирует объект Vacancy.
+
 
         Args:
-            title (str): Название вакансии.
-            url (str): URL вакансии.
-            salary (str): Информация о зарплате.
-            description (str): Описание вакансии.
-            employer (str): Название работодателя.
-            published_at (str): Дата публикации вакансии.
+            title: Название вакансии.
+            url: URL страницы вакансии.
+            salary: Информация о зарплате (строка).
+            description: Описание вакансии.
+            employer: Название работодателя.
+            published_at: Дата публикации.
+
 
         Raises:
-            ValueError: Если обязательные поля отсутствуют или некорректны.
+            ValueError: Если URL отсутствует или некорректен.
         """
-        # Валидация обязательных полей
+        # Валидация URL
         if not url or not url.strip():
             logger.error("URL вакансии обязателен")
             raise ValueError("URL вакансии обязателен")
-
         if not self._is_valid_url(url.strip()):
             logger.error(f"Некорректный URL: {url}")
             raise ValueError(f"Некорректный URL: {url}")
 
+        # Инициализация атрибутов с очисткой строк
         self._title = title.strip()
         self._url = url.strip()
         self._salary = self._process_salary(salary)
@@ -58,52 +70,33 @@ class Vacancy:
         self._published_at = (published_at or "").strip()
 
     def _is_valid_url(self, url: str) -> bool:
-        """
-        Проверяет корректность URL.
-
-        Args:
-            url (str): URL для проверки.
-
-        Returns:
-            bool: True, если URL корректен, иначе False.
-        """
+        """Проверяет, является ли строка корректным URL."""
         try:
             result = urlparse(url)
             return all([result.scheme, result.netloc])
         except Exception:
             return False
 
-    def _process_salary(self, salary: str) -> str:
-        """
-        Приводит зарплату к унифицированному формату отображения.
-
-        Args:
-            salary (str): Строка с информацией о зарплате.
-
-        Returns:
-            str: Унифицированная строка с зарплатой ("Зарплата не указана", если поле пустое).
-        """
-        if salary is None:
+    def _process_salary(self, salary: Optional[str]) -> str:
+        """Приводит строку с зарплатой к стандартному виду."""
+        if salary is None or not str(salary).strip():
             return "Зарплата не указана!"
-        salary_clean = salary.strip()
-        return salary_clean if salary_clean else "Зарплата не указана!"
+        return str(salary).strip()
 
     def get_salary_value(self) -> float:
         """
-        Вычисляет числовое значение зарплаты для сравнительного анализа.
+        Извлекает числовое значение зарплаты.
 
-        Например, извлекает цифры из строки вроде "от 50 000 руб." или "80 000—100 000 руб."
+        Для диапазонов возвращает среднее значение. Если числовые данные не найдены — 0.0.
 
         Returns:
-            float: Среднее значение зарплаты или 0, если зарплата не указана.
+            float: Числовое значение зарплаты или 0.0, если не указано.
         """
         if "Зарплата не указана!" in self._salary:
             return 0.0
 
-        # Ищем числа (возможно, с пробелами-разделителями тысяч)
-        numbers = re.findall(
-            r"\b\d{1,3}(?:\s?\d{3})*\b", self._salary.replace("\u202f", "")
-        )  # "\u202f" — неразрывный пробел
+        # Ищем числа (с пробелами‑разделителями тысяч)
+        numbers = re.findall(r"\b\d{1,3}(?:\s?\d{3})*\b", self._salary.replace("\u202f", ""))
         values = []
 
         for num_str in numbers:
@@ -111,72 +104,69 @@ class Vacancy:
             try:
                 values.append(float(cleaned))
             except ValueError:
-                continue  # Пропускаем некорректные строки
+                continue
 
         if len(values) >= 2:
-            return sum(values) / len(values)  # Среднее арифметическое
-        elif values:
+            return sum(values) / len(values)  # Среднее для диапазона
+        if values:
             return values[0]  # Единственное значение
-        else:
-            return 0.0  # Значение зарплаты не извлечено
+        return 0.0  # Не удалось извлечь числа
 
-    # Геттеры для свойств объекта
+    # Геттеры (через @property)
+    @property
     def title(self) -> str:
         return self._title
 
+    @property
     def url(self) -> str:
         return self._url
 
-    def salary(self) -> str:
-        return self._salary
-
+    @property
     def description(self) -> str:
         return self._description
 
+    @property
     def employer(self) -> str:
         return self._employer
 
+    @property
     def published_at(self) -> str:
         return self._published_at
 
-    # Сеттер для изменения зарплаты (с предварительной обработкой)
-    def set_salary(self, value: str) -> None:
+    @property
+    def salary(self) -> str:
+        return self._salary
+
+    @salary.setter
+    def salary(self, value: str) -> None:
         self._salary = self._process_salary(value)
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Преобразует объект в словарь для последующей сериализации в JSON.
+        Преобразует объект в словарь для сериализации (например, в JSON).
 
         Returns:
             Dict[str, Any]: Словарь с данными вакансии.
         """
-        data = {
-            "title": self._title,
-            "url": self._url,
-            "salary": self._salary,
-            "description": self._description,
-            "employer": self._employer,
-            "published_at": self._published_at,
+        return {
+            "title": self.title,
+            "url": self.url,
+            "salary": self.salary,
+            "description": self.description,
+            "employer": self.employer,
+            "published_at": self.published_at,
         }
-
-        # Проверка, что каждое значение не является методом (для надежности сериализации)
-        for key, value in data.items():
-            if callable(value):
-                logger.error(f"Поле '{key}' содержит метод, а не значение: {value}")
-                raise TypeError(f"Поле '{key}' содержит метод, а не значение: {value}")
-
-        return data
 
     @classmethod
     def from_hh_api(cls, item: Dict[str, Any]) -> "Vacancy":
         """
-        Создает объект Vacancy из ответа API hh.ru.
+        Создаёт экземпляр Vacancy из ответа API hh.ru.
 
         Args:
-            item (Dict[str, Any]): Данные вакансии из API hh.ru.
+            item: Словарь с данными вакансии из API hh.ru.
 
         Returns:
-            Vacancy: Новый объект Vacancy.
+            Vacancy: Готовый объект Vacancy.
         """
         salary_info = item.get("salary")
         salary_str = ""
@@ -187,7 +177,7 @@ class Vacancy:
             currency = salary_info.get("currency", "руб.")
 
             if salary_from and salary_to:
-                salary_str = f"{salary_from}-{salary_to} {currency}"
+                salary_str = f"{salary_from}–{salary_to} {currency}"
             elif salary_from:
                 salary_str = f"от {salary_from} {currency}"
             elif salary_to:
@@ -202,7 +192,7 @@ class Vacancy:
             published_at=item.get("published_at", ""),
         )
 
-    # Операции сравнения (по зарплате)
+    # Магические методы сравнения (по зарплате)
     def __lt__(self, other: "Vacancy") -> bool:
         return self.get_salary_value() < other.get_salary_value()
 
@@ -214,14 +204,26 @@ class Vacancy:
             return NotImplemented
         return self.get_salary_value() == other.get_salary_value()
 
-    # Строковое представление
+    def __ne__(self, other: object) -> bool:
+        result = self.__eq__(other)
+        return result if result is NotImplemented else not result
+
+    def __gt__(self, other: "Vacancy") -> bool:
+        return self.get_salary_value() > other.get_salary_value()
+
+    def __ge__(self, other: "Vacancy") -> bool:
+        return self.get_salary_value() >= other.get_salary_value()
+
+    # Строковые представления
     def __str__(self) -> str:
-        return f"{self._title} ({self._salary}) — {self._url}"
+        return f"{self.title} ({self.salary}) — {self.url}"
 
     def __repr__(self) -> str:
         return (
-            f"Vacancy(title='{self._title}', url='{self._url}', "
-            f"salary='{self._salary}', employer='{self._employer}', published_at='{self._published_at}')"
+            f"{self.__class__.__name__}("
+            f"title='{self.title}', url='{self.url}', "
+            f"salary='{self.salary}', employer='{self.employer}', "
+            f"published_at='{self.published_at}')"
         )
 
     @staticmethod
@@ -234,9 +236,9 @@ class Vacancy:
         """
         logger.info("Вывод в консоль информации о вакансиях")
         for i, vacancy in enumerate(vacancies, start=1):
-            print(f"{i}. {vacancy.title()}")
-            print(f"Зарплата: {vacancy.salary()}")
-            print(f"Описание: {vacancy.description()[:100]}...")  # Ограничили вывод первых 100 символов
-            print(f"Работодатель: {vacancy.employer()}")
-            print(f"Ссылка: {vacancy.url()}")
+            print(f"{i}. {vacancy.title}")
+            print(f"Зарплата: {vacancy.salary}")
+            print(f"Описание: {vacancy.description[:300]}...")  # Ограничили вывод первых 100 символов
+            print(f"Работодатель: {vacancy.employer}")
+            print(f"Ссылка: {vacancy.url}")
             print("-" * 50)

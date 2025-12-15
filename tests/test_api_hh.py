@@ -1,12 +1,9 @@
-import pytest
+from unittest.mock import MagicMock, patch
+
 import requests
-from unittest.mock import patch, MagicMock
-from datetime import datetime
 
-from src.api_hh import HeadHunterAPI, BaseAPI
+from src.api_hh import BaseAPI, HeadHunterAPI
 from src.vacancies import Vacancy
-
-
 
 # Тестовые данные
 VALID_QUERY = "Python разработчик"
@@ -23,11 +20,11 @@ MOCK_HH_RESPONSE = {
             "salary": {"from": 150000, "to": 200000, "currency": "RUR"},
             "snippet": {"requirement": "Опыт от 3 лет", "responsibility": "Разработка"},
             "employer": {"name": "ООО ТехСофт"},
-            "published_at": "2025-12-15T10:00:00+0300"
+            "published_at": "2025-12-15T10:00:00+0300",
         }
     ],
     "found": 1,
-    "pages": 1
+    "pages": 1,
 }
 
 EMPTY_HH_RESPONSE = {"items": [], "found": 0, "pages": 0}
@@ -37,14 +34,12 @@ HTTP_404_ERROR = requests.exceptions.HTTPError()
 HTTP_404_ERROR.response = MagicMock(status_code=404)
 
 
-
 def test_baseapi_init_session():
     """Проверка инициализации HTTP‑сессии в BaseAPI."""
     api = BaseAPI()
     assert hasattr(api, "session")
     assert api.session is not None
     assert isinstance(api.session, requests.Session)
-
 
 
 @patch("requests.Session.request")
@@ -63,7 +58,6 @@ def test_baseapi__request_success(mock_request):
     assert mock_request.call_args[1]["params"] == {"param": "value"}
 
 
-
 @patch("requests.Session.request")
 def test_baseapi__request_http_error(mock_request, caplog):
     """Проверка обработки HTTP‑ошибок в _request."""
@@ -74,7 +68,6 @@ def test_baseapi__request_http_error(mock_request, caplog):
 
     assert result is None
     assert "Ошибка HTTP: 404" in caplog.text
-
 
 
 @patch("requests.Session.request")
@@ -89,20 +82,17 @@ def test_baseapi__request_network_error(mock_request, caplog):
     assert "Сетевая ошибка:" in caplog.text
 
 
-
 @patch("requests.Session.request")
 def test_baseapi__request_invalid_json(mock_request, caplog):
     """Проверка обработки невалидного JSON в _request."""
     mock_request.return_value.status_code = 200
     mock_request.return_value.json.side_effect = ValueError("Invalid JSON")
 
-
     api = BaseAPI()
     result = api._request("test", {})
 
     assert result is None
     assert "Ошибка парсинга JSON:" in caplog.text
-
 
 
 @patch.object(HeadHunterAPI, "_request")
@@ -112,10 +102,7 @@ def test_headhunterapi_get_requests_success(mock_request):
 
     api = HeadHunterAPI()
     vacancies = api.get_requests(
-        query=VALID_QUERY,
-        area=VALID_AREA,
-        per_page=VALID_PER_PAGE,
-        excluded_text=VALID_EXCLUDED
+        query=VALID_QUERY, area=VALID_AREA, per_page=VALID_PER_PAGE, excluded_text=VALID_EXCLUDED
     )
 
     assert len(vacancies) == 1
@@ -124,12 +111,10 @@ def test_headhunterapi_get_requests_success(mock_request):
     assert vacancies[0].url == "https://hh.ru/vacancy/12345"
 
 
-
 @patch.object(HeadHunterAPI, "_request")
 def test_headhunterapi_get_requests_empty_response(mock_request):
     """Проверка пустого ответа от API в get_requests."""
     mock_request.return_value = EMPTY_HH_RESPONSE
-
 
     api = HeadHunterAPI()
     vacancies = api.get_requests(query=VALID_QUERY)
@@ -137,19 +122,16 @@ def test_headhunterapi_get_requests_empty_response(mock_request):
     assert len(vacancies) == 0
 
 
-
 @patch.object(HeadHunterAPI, "_request")
 def test_headhunterapi_get_requests_http_error(mock_request, caplog):
     """Проверка обработки HTTP‑ошибки в get_requests."""
     mock_request.side_effect = HTTP_404_ERROR
-
 
     api = HeadHunterAPI()
     vacancies = api.get_requests(query=VALID_QUERY)
 
     assert vacancies == []
     assert "Ошибка при запросе вакансий:" in caplog.text
-
 
 
 @patch.object(HeadHunterAPI, "_request")
@@ -164,7 +146,6 @@ def test_headhunterapi_get_requests_network_error(mock_request, caplog):
     assert "Сетевая ошибка при запросе вакансий:" in caplog.text
 
 
-
 def test_headhunterapi__parse_items_valid():
     """Проверка парсинга валидных данных в _parse_items."""
     api = HeadHunterAPI()
@@ -175,14 +156,12 @@ def test_headhunterapi__parse_items_valid():
     assert items[0].salary == "150 000 – 200 000 руб."
 
 
-
 def test_headhunterapi__parse_items_missing_items():
     """Проверка отсутствия поля 'items' в _parse_items."""
     api = HeadHunterAPI()
     items = api._parse_items({"wrong_key": []})
 
     assert items == []
-
 
 
 def test_headhunterapi__parse_items_invalid_item():
@@ -194,22 +173,13 @@ def test_headhunterapi__parse_items_invalid_item():
     assert items == []  # Должен пропустить невалидный элемент
 
 
-
 @patch.object(HeadHunterAPI, "_request")
 def test_headhunterapi_get_requests_with_pagination(mock_request):
     """Проверка работы с пагинацией в get_requests (несколько страниц)."""
     # Имитируем 2 страницы
     mock_request.side_effect = [
-        {
-            "items": [{"id": "1", "name": "Dev 1", "alternate_url": "url1"}],
-            "pages": 2,
-            "found": 2
-        },
-        {
-            "items": [{"id": "2", "name": "Dev 2", "alternate_url": "url2"}],
-            "pages": 2,
-            "found": 2
-        }
+        {"items": [{"id": "1", "name": "Dev 1", "alternate_url": "url1"}], "pages": 2, "found": 2},
+        {"items": [{"id": "2", "name": "Dev 2", "alternate_url": "url2"}], "pages": 2, "found": 2},
     ]
 
     api = HeadHunterAPI()
@@ -233,7 +203,7 @@ def test_headhunterapi_get_requests_excluded_text(mock_request):
                 "salary": {},
                 "snippet": {},
                 "employer": {},
-                "published_at": "2025-12-15T10:00:00+0300"
+                "published_at": "2025-12-15T10:00:00+0300",
             },
             {
                 "id": "2",
@@ -242,18 +212,15 @@ def test_headhunterapi_get_requests_excluded_text(mock_request):
                 "salary": {},
                 "snippet": {},
                 "employer": {},
-                "published_at": "2025-12-15T11:00:00+0300"
-            }
+                "published_at": "2025-12-15T11:00:00+0300",
+            },
         ],
         "found": 2,
-        "pages": 1
+        "pages": 1,
     }
 
     api = HeadHunterAPI()
-    vacancies = api.get_requests(
-        query=VALID_QUERY,
-        excluded_text="стажёр"
-    )
+    vacancies = api.get_requests(query=VALID_QUERY, excluded_text="стажёр")
 
     assert len(vacancies) == 1
     assert vacancies[0].title == "Senior Python Developer"
@@ -263,13 +230,7 @@ def test_headhunterapi_get_requests_excluded_text(mock_request):
 def test_headhunterapi_from_hh_item_salary_formatting():
     """Проверка форматирования зарплаты в _from_hh_item."""
     api = HeadHunterAPI()
-    item = {
-        "salary": {
-            "from": 100000,
-            "to": 150000,
-            "currency": "RUR"
-        }
-    }
+    item = {"salary": {"from": 100000, "to": 150000, "currency": "RUR"}}
     vacancy = api._from_hh_item(item)
     assert vacancy.salary == "100 000 – 150 000 руб."
 
@@ -293,12 +254,7 @@ def test_headhunterapi_from_hh_item_salary_formatting():
 def test_headhunterapi__from_hh_item_description_concat():
     """Проверка сборки описания из snippet в _from_hh_item."""
     api = HeadHunterAPI()
-    item = {
-        "snippet": {
-            "requirement": "Знание Python",
-            "responsibility": "Разработка API"
-        }
-    }
+    item = {"snippet": {"requirement": "Знание Python", "responsibility": "Разработка API"}}
     vacancy = api._from_hh_item(item)
     assert "Знание Python" in vacancy.description
     assert "Разработка API" in vacancy.description

@@ -1,9 +1,9 @@
-import pytest
 import json
 import os
-import re  # ← Добавлено для parse_salary (если используется)
-from unittest.mock import patch, mock_open
 from datetime import datetime
+from unittest.mock import mock_open, patch
+
+import pytest
 
 # Импорты тестируемых компонентов
 from src.vacancies import Vacancy
@@ -15,9 +15,11 @@ def getdefault_filename() -> str:
     now = datetime.now()
     return f"vacancies_{now.strftime('%Y%m%d_%H%M%S')}.json"
 
+
 def test_json_saver_init_creates_empty_list(json_saver):
     """Проверка инициализации: пустой список вакансий."""
     assert json_saver.vacancies == []
+
 
 def test_add_vacancy_success(json_saver, sample_vacancy):
     """Проверка успешного добавления вакансии."""
@@ -26,12 +28,14 @@ def test_add_vacancy_success(json_saver, sample_vacancy):
     assert len(json_saver.vacancies) == 1
     assert json_saver.vacancies[0].url == sample_vacancy.url  # ← без скобок
 
+
 def test_add_vacancy_duplicate(json_saver, sample_vacancy):
     """Проверка защиты от дубликатов по URL."""
     json_saver._add_vacancy(sample_vacancy)
     result = json_saver._add_vacancy(sample_vacancy)  # Повторное добавление
     assert result is False
     assert len(json_saver.vacancies) == 1  # Количество не изменилось
+
 
 def test_save_data_writes_json(json_saver, sample_vacancy, json_saver_temp_file):
     """Проверка сохранения данных в JSON-файл."""
@@ -51,6 +55,7 @@ def test_save_data_writes_json(json_saver, sample_vacancy, json_saver_temp_file)
     assert data[0]["salary"] == "150000"
     assert data[0]["employer"] == "ООО ТехСофт"
     assert data[0]["published_at"] == "2025-12-15T10:00:00"
+
 
 def test_load_data_reads_json(json_saver_temp_file, sample_vacancy):
     """Проверка загрузки данных из JSON-файла."""
@@ -76,6 +81,7 @@ def test_delete_vacancy_success(json_saver, sample_vacancy):
     result = json_saver.delete_vacancy(sample_vacancy)
     assert result is True
     assert len(json_saver.vacancies) == 0
+
 
 def test_delete_vacancy_not_found(json_saver, sample_vacancy):
     """Проверка удаления несуществующей вакансии."""
@@ -103,7 +109,7 @@ def test_get_top_by_salary(json_saver):
         salary="100000",
         description="",
         employer="Работодатель 1",
-        published_at="2025-12-15T10:00:00"
+        published_at="2025-12-15T10:00:00",
     )
     v2 = Vacancy(
         title="B",
@@ -111,7 +117,7 @@ def test_get_top_by_salary(json_saver):
         salary="200000",
         description="",
         employer="Работодатель 2",
-        published_at="2025-12-15T11:00:00"
+        published_at="2025-12-15T11:00:00",
     )
     v3 = Vacancy(
         title="C",
@@ -119,7 +125,7 @@ def test_get_top_by_salary(json_saver):
         salary="150000",
         description="",
         employer="Работодатель 3",
-        published_at="2025-12-15T12:00:00"
+        published_at="2025-12-15T12:00:00",
     )
 
     for v in [v1, v2, v3]:
@@ -129,7 +135,6 @@ def test_get_top_by_salary(json_saver):
     assert len(top_2) == 2
     assert top_2[0].salary == "200000"  # Самая высокая зарплата
     assert top_2[1].salary == "150000"
-
 
 
 def test_clear_method(json_saver, sample_vacancy):
@@ -143,6 +148,7 @@ def test_clear_method(json_saver, sample_vacancy):
         data = json.load(f)
     assert data == []
 
+
 @patch("builtins.open", new_callable=mock_open)
 def test_save_data_logs_error_on_exception(mock_file):
     """Проверка логирования ошибки при сохранении."""
@@ -154,7 +160,7 @@ def test_save_data_logs_error_on_exception(mock_file):
             salary="100",
             description="",
             employer="",
-            published_at="2025-12-15T10:00:00"
+            published_at="2025-12-15T10:00:00",
         )
     ]
 
@@ -164,12 +170,14 @@ def test_save_data_logs_error_on_exception(mock_file):
     with pytest.raises(OSError):
         saver._save_data()
 
+
 @patch("builtins.open", side_effect=FileNotFoundError("File not found"))
 def test_load_data_handles_missing_file(mock_file):
     """Проверка обработки отсутствующего файла при загрузке."""
     saver = JSONSaver("missing.json")
     saver._load_data()  # Не должно вызывать исключение
     assert saver.vacancies == []  # Список остаётся пустым
+
 
 @patch("builtins.open", side_effect=json.JSONDecodeError("Invalid JSON", "", 0))
 def test_load_data_handles_invalid_json(mock_file):

@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import pytest
 
@@ -22,12 +21,10 @@ def temp_filename():
         os.remove(filename)
 
 
-
 @pytest.fixture(scope="function")
 def area_api(temp_filename):
     """Экземпляр AreaAPI с временным файлом."""
     return AreaAPI("Москва", filename=str(temp_filename))
-
 
 
 @pytest.fixture(scope="function")
@@ -39,10 +36,12 @@ def valid_areas_data():
         {"id": "78", "name": "Ленинградская область", "lat": 60.0, "lng": 30.5, "areas": []},
     ]
 
+
 @pytest.fixture(scope="function")
 def invalid_json():
     """Невалидные JSON-данные."""
     return "Это не JSON!"
+
 
 @pytest.fixture(scope="function")
 def vacancies_list():
@@ -54,7 +53,7 @@ def vacancies_list():
             "salary": "150 000 – 200 000 руб.",
             "description": "Разработка на Python",
             "employer": "ООО ТехСофт",
-            "published_at": "2025-12-15T10:00:00+0300"
+            "published_at": "2025-12-15T10:00:00+0300",
         },
         {
             "title": "Junior Python",
@@ -62,20 +61,15 @@ def vacancies_list():
             "salary": "",
             "description": "Базовые задачи",
             "employer": "ООО Старт",
-            "published_at": "2025-12-16T09:00:00+0300"
-        }
+            "published_at": "2025-12-16T09:00:00+0300",
+        },
     ]
+
 
 @pytest.fixture(scope="function")
 def invalid_paths():
     """Список некорректных путей к файлам."""
-    return [
-        "",
-        " ",
-        "/invalid/path/with/null\x00.json",
-        "../bad:name|.json"
-    ]
-
+    return ["", " ", "/invalid/path/with/null\x00.json", "../bad:name|.json"]
 
 
 # Тестовые данные
@@ -87,8 +81,9 @@ def sample_vacancy():
         salary="150000",
         description="Разработка на Python",
         employer="ООО ТехСофт",
-        published_at="2025-12-15T10:00:00"  # или другая дата
+        published_at="2025-12-15T10:00:00",  # или другая дата
     )
+
 
 @pytest.fixture
 def json_saver_temp_file():

@@ -1,6 +1,6 @@
 from src import app_logger
-from src.area import AreaAPI
 from src.api_hh import HeadHunterAPI
+from src.area import AreaAPI
 from src.config import URL_HH
 from src.vacancies import Vacancy
 from src.work_files import JSONSaver

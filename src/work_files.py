@@ -126,8 +126,8 @@ class JSONSaver(VacancyStorage):
         Args:
             vacancy (Vacancy): Вакансия для добавления.
         """
-        if self._is_duplicate(vacancy.url()):
-            logger.info(f"Дубликат: вакансия с URL {vacancy.url()} уже существует.")
+        if self._is_duplicate(vacancy.url):
+            logger.info(f"Дубликат: вакансия с URL {vacancy.url} уже существует.")
             return False
 
         self.vacancies.append(vacancy)
@@ -181,7 +181,7 @@ class JSONSaver(VacancyStorage):
                 salary=item["salary"],
                 description=item.get("description", ""),
                 employer=item["employer"],
-                published_at=item["published_at"]
+                published_at=item["published_at"],
             )
             for item in data
         ]
@@ -207,7 +207,7 @@ class JSONSaver(VacancyStorage):
         Returns:
             bool: True, если такая вакансия уже существует, иначе False.
         """
-        return any(v.url() == url for v in self.vacancies)
+        return any(v.url == url for v in self.vacancies)
 
     def get_vacancies(self) -> List[Vacancy]:
         """
@@ -237,7 +237,7 @@ class JSONSaver(VacancyStorage):
             return True
 
         for index, current_vacancy in enumerate(self.vacancies):
-            if current_vacancy.url() == vacancy.url():
+            if current_vacancy.url == vacancy.url:
                 del self.vacancies[index]
                 self._save_data()
                 return True
@@ -255,7 +255,7 @@ class JSONSaver(VacancyStorage):
         """
         keyword_lower = keyword.lower()
         return [
-            v for v in self.vacancies if keyword_lower in v.title().lower() or keyword_lower in v.description().lower()
+            v for v in self.vacancies if keyword_lower in v.title.lower() or keyword_lower in v.description.lower()
         ]
 
     def get_top_by_salary(self, n: int) -> List[Vacancy]:
@@ -268,7 +268,7 @@ class JSONSaver(VacancyStorage):
         Returns:
             List[Vacancy]: Топ-N вакансий.
         """
-        sorted_vacancies = sorted(self.vacancies, key=lambda x: x.salary(), reverse=True)
+        sorted_vacancies = sorted(self.vacancies, key=lambda x: x.salary, reverse=True)
         return sorted_vacancies[:n]
 
     # Дополнительно реализованные методы для будущих расширений функционала
@@ -307,7 +307,7 @@ class JSONSaver(VacancyStorage):
         return [
             v
             for v in self.vacancies
-            if (salary := parse_salary(v.salary())) is not None and min_salary <= salary <= max_salary
+            if (salary := parse_salary(v.salary)) is not None and min_salary <= salary <= max_salary
         ]
 
     def filter_by_employer(self, employer: str) -> List[Vacancy]:
@@ -321,4 +321,4 @@ class JSONSaver(VacancyStorage):
             List[Vacancy]: Вакансии указанного работодателя.
         """
         employer_lower = employer.lower()
-        return [v for v in self.vacancies if employer_lower in v.employer().lower()]
+        return [v for v in self.vacancies if employer_lower in v.employer.lower()]
