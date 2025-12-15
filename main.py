@@ -91,7 +91,7 @@ def user_interaction() -> None:
                 continue
             area_api = AreaAPI(area_str)
             area_id = area_api.get_id_area()
-            print(area_id)
+            # print(area_id)
 
             logger.info(f"Ищем вакансии по запросу '{query}'...")
             print(f"Ищем вакансии по запросу '{query}'...")

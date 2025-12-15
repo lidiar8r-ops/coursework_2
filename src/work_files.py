@@ -170,13 +170,32 @@ class JSONSaver(VacancyStorage):
             self.vacancies = []
             return
 
-        try:
-            with open(self.filename, "r", encoding="utf-8") as file:
-                data = json.load(file)
-                self.vacancies = [Vacancy(**item) for item in data]  # Конструируем объект Vacancy из словаря
-        except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.error(f"Ошибка при чтении файла {self.filename}: {e}")
-            self.vacancies = []
+        with open(self.filename, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Преобразуем словари в объекты Vacancy
+        self.vacancies = [
+            Vacancy(
+                title=item["title"],
+                url=item["url"],
+                salary=item["salary"],
+                description=item.get("description", ""),
+                employer=item["employer"],
+                published_at=item["published_at"]
+            )
+            for item in data
+        ]
+        # if not os.path.exists(self.filename):
+        #     self.vacancies = []
+        #     return
+        #
+        # try:
+        #     with open(self.filename, "r", encoding="utf-8") as file:
+        #         data = json.load(file)
+        #         self.vacancies = [Vacancy(**item) for item in data]  # Конструируем объект Vacancy из словаря
+        # except (json.JSONDecodeError, KeyError, TypeError) as e:
+        #     logger.error(f"Ошибка при чтении файла {self.filename}: {e}")
+        #     self.vacancies = []
 
     def _is_duplicate(self, url: str) -> bool:
         """
