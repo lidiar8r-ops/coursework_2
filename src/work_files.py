@@ -37,7 +37,7 @@ class VacancyStorage(ABC):
             Возвращает топ-N вакансий с самой высокой зарплатой.
     """
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def _add_vacancy(self, vacancy: Vacancy) -> bool:
         """
         Добавляет вакансию в хранилище.
@@ -47,7 +47,7 @@ class VacancyStorage(ABC):
         """
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def get_vacancies(self) -> List[Vacancy]:
         """
         Возвращает список всех существующих вакансий.
@@ -57,7 +57,7 @@ class VacancyStorage(ABC):
         """
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def delete_vacancy(self, vacancy: Vacancy) -> bool:
         """
         Удаляет вакансию из хранилища.
@@ -70,7 +70,7 @@ class VacancyStorage(ABC):
         """
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def filter_by_keyword(self, keyword: str) -> List[Vacancy]:
         """
         Осуществляет выборку вакансий по ключевому слову.
@@ -83,7 +83,7 @@ class VacancyStorage(ABC):
         """
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def get_top_by_salary(self, n: int) -> List[Vacancy]:
         """
         Возвращает N лучших вакансий по зарплате.

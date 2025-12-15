@@ -185,3 +185,99 @@ def test_load_data_handles_invalid_json(mock_file):
     saver = JSONSaver("bad.json")
     saver._load_data()
     assert saver.vacancies == []  # Список остаётся пустым
+
+
+
+def test_get_all_returns_empty_list_on_init(json_saver):
+    """
+    Проверяет, что при инициализации хранилища метод get_all() возвращает пустой список.
+    """
+    vacancies = json_saver.get_all()
+    assert isinstance(vacancies, list)
+    assert len(vacancies) == 0
+
+
+def test_get_all_returns_list_of_vacancies(json_saver, sample_vacancy):
+    """
+    Проверяет, что метод get_all() корректно возвращает список добавленных вакансий.
+    """
+    json_saver._add_vacancy(sample_vacancy)
+    vacancies = json_saver.get_all()
+
+    assert isinstance(vacancies, list)
+    assert len(vacancies) == 1
+    assert vacancies[0].url == sample_vacancy.url
+    assert vacancies[0].title == sample_vacancy.title
+
+
+def test_get_all_with_multiple_vacancies(json_saver):
+    """
+    Проверяет работу метода get_all() с несколькими вакансиями.
+    """
+    vacancy1 = Vacancy(
+        title="Python Developer 1",
+        url="https://example.com/1",
+        salary="100000",
+        description="",
+        employer="Employer 1",
+        published_at="2025-12-15T10:00:00"
+    )
+    vacancy2 = Vacancy(
+        title="Python Developer 2",
+        url="https://example.com/2",
+        salary="150000",
+        description="",
+        employer="Employer 2",
+        published_at="2025-12-15T11:00:00"
+    )
+
+    json_saver._add_vacancy(vacancy1)
+    json_saver._add_vacancy(vacancy2)
+
+    vacancies = json_saver.get_all()
+
+    assert isinstance(vacancies, list)
+    assert len(vacancies) == 2
+    assert vacancies[0].title == "Python Developer 1"
+    assert vacancies[1].title == "Python Developer 2"
+
+
+def test_get_all_after_clear(json_saver, sample_vacancy):
+    """
+    Проверяет, что после очистки хранилища метод get_all() возвращает пустой список.
+    """
+    json_saver._add_vacancy(sample_vacancy)
+    json_saver.clear()
+
+    vacancies = json_saver.get_all()
+    assert isinstance(vacancies, list)
+    assert len(vacancies) == 0
+
+
+def test_get_all_after_load_data(json_saver_temp_file, sample_vacancy):
+    """
+    Проверяет, что метод get_all() корректно возвращает данные после загрузки из файла.
+    """
+    # Создаем файл с вакансиями
+    with open(json_saver_temp_file, "w", encoding="utf-8") as f:
+        json.dump([sample_vacancy.to_dict()], f, ensure_ascii=False, indent=4)
+
+    # Инициализируем хранилище и загружаем данные
+    json_saver = JSONSaver(json_saver_temp_file)
+    json_saver._load_data()
+
+    vacancies = json_saver.get_all()
+    assert isinstance(vacancies, list)
+    assert len(vacancies) == 1
+    assert vacancies[0].title == sample_vacancy.title
+
+
+def test_get_all_returns_same_type_as_stored(json_saver, sample_vacancy):
+    """
+    Проверяет, что элементы списка, возвращаемого get_all(), являются объектами класса Vacancy.
+    """
+    json_saver._add_vacancy(sample_vacancy)
+    vacancies = json_saver.get_all()
+
+    for vacancy in vacancies:
+        assert isinstance(vacancy, Vacancy)
