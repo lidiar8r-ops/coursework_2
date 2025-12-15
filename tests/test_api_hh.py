@@ -1,5 +1,8 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+
+import requests
+
 from src.api_hh import HeadHunterAPI
 
 # Пример мокового ответа от HH API
@@ -180,3 +183,114 @@ def test_headhunterapi_get_requests_excluded_text(mock_request):
 
     assert len(vacancies) == 1
     assert "стажёр" not in vacancies[0]["name"].lower()
+
+
+@patch("src.api_hh.logger")
+class TestHeadHunterAPIRequest:
+
+    def setup_method(self):
+        self.api = HeadHunterAPI()
+        self.endpoint = "vacancies"
+        self.params = {"text": "python"}
+
+    def test_request_success_valid_dict(self, mock_logger):
+        """Проверка успешного ответа (200) с валидным dict."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json = MagicMock(return_value={"items": [], "pages": 1})
+
+        with patch.object(self.api.session, "get", return_value=mock_response):
+            result = self.api._request(self.endpoint, self.params)
+
+        assert result == {"items": [], "pages": 1}
+        mock_logger.error.assert_not_called()
+
+    def test_request_success_non_dict(self, mock_logger):
+        """Ответ 200, но данные не dict → ошибка и None."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json = MagicMock(return_value=["not", "a", "dict"])
+
+        with patch.object(self.api.session, "get", return_value=mock_response):
+            result = self.api._request(self.endpoint, self.params)
+
+        assert result is None
+        assert mock_logger.error.call_count == 1
+        assert "Ответ API не является словарём" in str(mock_logger.error.call_args)
+
+    def test_request_http_403(self, mock_logger):
+        """HTTP 403 → CAPTCHA."""
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+
+        with patch.object(self.api.session, "get", return_value=mock_response):
+            result = self.api._request(self.endpoint, self.params)
+
+        assert result is None
+        assert mock_logger.error.call_count == 1
+        assert "CAPTCHA" in str(mock_logger.error.call_args)
+
+    def test_request_http_404(self, mock_logger):
+        """HTTP 404 → ресурс не найден."""
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+
+        with patch.object(self.api.session, "get", return_value=mock_response):
+            result = self.api._request(self.endpoint, self.params)
+
+        assert result is None
+        assert mock_logger.error.call_count == 1
+        assert "Ресурс не найден" in str(mock_logger.error.call_args)
+
+    def test_request_http_401(self, mock_logger):
+        """HTTP 401 → неавторизованный запрос."""
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+
+        with patch.object(self.api.session, "get", return_value=mock_response):
+            result = self.api._request(self.endpoint, self.params)
+        assert result is None
+        assert mock_logger.error.call_count == 1
+        assert "Неавторизованный запрос" in str(mock_logger.error.call_args)
+
+
+    def test_request_http_429(self, mock_logger):
+        """HTTP 429 → лимит запросов."""
+        mock_response = MagicMock()
+        mock_response.status_code = 429
+
+        with patch.object(self.api.session, "get", return_value=mock_response):
+            result = self.api._request(self.endpoint, self.params)
+        assert result is None
+        assert mock_logger.error.call_count == 1
+        assert "Превышен лимит запросов" in str(mock_logger.error.call_args)
+
+
+    def test_request_http_other_status(self, mock_logger):
+        """Другие HTTP-статусы (например, 500) → общая ошибка."""
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.text = "Internal Server Error"
+
+
+        with patch.object(self.api.session, "get", return_value=mock_response):
+            result = self.api._request(self.endpoint, self.params)
+        assert result is None
+        assert mock_logger.error.call_count == 1
+        assert "HTTP 500" in str(mock_logger.error.call_args)
+        assert "Internal Server Error" in str(mock_logger.error.call_args)
+
+
+    def test_request_network_exception(self, mock_logger):
+        """Исключение сети (например, Timeout) → ошибка и None."""
+        with patch.object(
+            self.api.session,
+            "get",
+            side_effect=requests.exceptions.RequestException("Connection failed")
+        ):
+            result = self.api._request(self.endpoint, self.params)
+
+        assert result is None
+        assert mock_logger.error.call_count == 1
+        assert "Ошибка сети" in str(mock_logger.error.call_args)
+        assert "Connection failed" in str(mock_logger.error.call_args)
