@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from src.api import AreaAPI
+from src.area import AreaAPI
 
 
 def create_temp_file(filename: Path, content: dict):
@@ -19,7 +19,7 @@ def remove_temp_file(filename: str):
         filepath.unlink()
 
 
-def test_get_id_area_from_api_success(area_api, temp_filename, valid_areas_data):
+def test_get_id_area_from_area_success(area_api, temp_filename, valid_areas_data):
     remove_temp_file(temp_filename)
     with patch.object(area_api, "_request", return_value=valid_areas_data):
         assert area_api.get_id_area() == "1"
@@ -40,7 +40,7 @@ def test_get_id_area_file_invalid_json(area_api, temp_filename):
 def test_get_id_area_network_error(area_api, temp_filename):
     remove_temp_file(temp_filename)
     with patch.object(area_api, "_request", side_effect=requests.exceptions.RequestException("Network error")):
-        with patch("src.api.logger.error") as mock_log:
+        with patch("src.area.logger.error") as mock_log:
             area_id = area_api.get_id_area()
 
     assert area_id == "0"
@@ -79,7 +79,7 @@ def test_save_data_success(area_api, temp_filename, valid_areas_data):
 
 def test_save_data_io_error(area_api, temp_filename):
     with patch("builtins.open", side_effect=IOError("Permission denied")):
-        with patch("src.api.logger.error") as mock_log:
+        with patch("src.area.logger.error") as mock_log:
             # Явно перехватываем исключение, которое пробрасывает _save_data
             with pytest.raises(IOError) as exc_info:
                 area_api._save_data({"data": "test"})
@@ -110,7 +110,7 @@ def test_find_area_id_parametrized(area_api, area_name, expected_id, valid_areas
 
 def test_find_area_id_invalid_input():
 
-    api = AreaAPI(area="Москва")  # создаём экземпляр
+    area = AreaAPI(area="Москва")  # создаём экземпляр
 
     # Перебираем разные некорректные варианты данных
     for data in [
@@ -125,55 +125,55 @@ def test_find_area_id_invalid_input():
         tuple(),  # кортеж
         "текст",  # строка
     ]:
-        result = api.find_area_id(data, "Москва")
+        result = area.find_area_id(data, "Москва")
         assert result == "0", f"Для {data} ожидался '0', но получено {result}"
 
 
 def test_find_area_id_dict_input():
-    from src.api import AreaAPI
+    from src.area import AreaAPI
 
-    api = AreaAPI(area="Москва")
+    area = AreaAPI(area="Москва")
 
     # Входной словарь (один регион)
     data = {"id": "1", "name": "Москва", "areas": []}
 
     # Вызываем метод с dict-входом
-    result = api.find_area_id(data, "Москва")
+    result = area.find_area_id(data, "Москва")
 
     # Проверяем, что нашёл ID "1"
     assert result == "1", f"Ожидался '1', но получено {result}"
 
 
 def test_find_area_id_nested_found():
-    from src.api import AreaAPI
+    from src.area import AreaAPI
 
-    api = AreaAPI(area="Ленинградская область")
+    area = AreaAPI(area="Ленинградская область")
 
     data = [
         {"id": "2", "name": "Санкт‑Петербург", "areas": [{"id": "78", "name": "Ленинградская область", "areas": []}]}
     ]
 
-    result = api.find_area_id(data, "Ленинградская область")
+    result = area.find_area_id(data, "Ленинградская область")
     assert result == "78", f"Ожидался '78', но получено {result}"
 
 
-def test_get_id_area_handles_none_from_api():
-    from src.api import AreaAPI
+def test_get_id_area_handles_none_from_area():
+    from src.area import AreaAPI
 
-    api = AreaAPI(area="Москва", filename="dummy.json")
+    area = AreaAPI(area="Москва", filename="dummy.json")
 
-    with patch.object(api, "get_requests", return_value=None):
-        result = api.get_id_area()
+    with patch.object(area, "get_requests", return_value=None):
+        result = area.get_id_area()
 
     assert result == "0", f"Ожидался '0', но получено {result}"
 
 
 def test_get_id_area_handles_unexpected_exception():
-    api = AreaAPI(area="Москва", filename="temp_nonexistent.json")
+    area = AreaAPI(area="Москва", filename="temp_nonexistent.json")
 
-    with patch("src.api.logger.error") as mock_logger:  # Заглушаем и контролируем
-        with patch.object(api, "get_requests", side_effect=ValueError("Искусственная ошибка")):
-            result = api.get_id_area()
+    with patch("src.area.logger.error") as mock_logger:  # Заглушаем и контролируем
+        with patch.object(area, "get_requests", side_effect=ValueError("Искусственная ошибка")):
+            result = area.get_id_area()
 
     # Проверяем, что logger.error был вызван ровно 1 раз
     assert mock_logger.call_count == 1

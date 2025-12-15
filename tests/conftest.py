@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from src.api import AreaAPI
+from src.area import AreaAPI
 from src.config import DATA_DIR
 
 # Константа с путём к данным
@@ -48,3 +48,5 @@ def valid_areas_data():
 @pytest.fixture
 def invalid_json():
     return "Это не JSON!"
+
+

@@ -1,5 +1,5 @@
 from src import app_logger
-from src.api import AreaAPI
+from src.area import AreaAPI
 from src.api_hh import HeadHunterAPI
 from src.config import URL_HH
 from src.vacancies import Vacancy

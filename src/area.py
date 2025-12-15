@@ -18,7 +18,7 @@ from src.api_hh import BaseAPI  # Базовый класс API для рабо�
 from src.config import filename_areas  # Файл конфигурации, содержащий путь к файлу с областями
 
 # Настройка логирования
-logger = app_logger.get_logger("api.log")
+logger = app_logger.get_logger("area.log")
 
 
 class AreaAPI(BaseAPI):

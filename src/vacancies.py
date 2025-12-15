@@ -3,7 +3,7 @@ import re
 from typing import Any, Dict, List
 from urllib.parse import urlparse
 
-# Настройка логирования (если ещё не настроена)
+# Настройка логирования
 logger = logging.getLogger("vacancy")
 
 
