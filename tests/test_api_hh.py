@@ -1,5 +1,4 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import requests
 
@@ -12,23 +11,14 @@ MOCK_HH_RESPONSE = {
             "id": "12345",
             "name": "Python Developer",
             "alternate_url": "https://hh.ru/vacancy/12345",
-            "salary": {
-                "from": 150000,
-                "to": 200000,
-                "currency": "RUR"
-            },
-            "snippet": {
-                "requirement": "Опыт от 3 лет",
-                "responsibility": "Разработка"
-            },
-            "employer": {
-                "name": "ООО ТехСофт"
-            },
-            "published_at": "2025-12-15T10:00:00+0300"
+            "salary": {"from": 150000, "to": 200000, "currency": "RUR"},
+            "snippet": {"requirement": "Опыт от 3 лет", "responsibility": "Разработка"},
+            "employer": {"name": "ООО ТехСофт"},
+            "published_at": "2025-12-15T10:00:00+0300",
         }
     ],
     "found": 1,
-    "pages": 1
+    "pages": 1,
 }
 
 # Константы для тестов
@@ -38,13 +28,11 @@ VALID_PER_PAGE = 20
 VALID_EXCLUDED = ""
 
 
-
 def test_headhunterapi_init():
     """Проверка инициализации HeadHunterAPI (без проверки logger)."""
     api = HeadHunterAPI()
     assert hasattr(api, "session")
     assert api.session is not None
-
 
 
 @patch.object(HeadHunterAPI, "_request")
@@ -64,7 +52,6 @@ def test_headhunterapi_get_requests_success(mock_request):
     assert vacancies[0]["name"] == "Python Developer"
 
 
-
 @patch.object(HeadHunterAPI, "_request")
 def test_headhunterapi_get_requests_empty_response(mock_request):
     """Проверка обработки пустого ответа от API."""
@@ -81,7 +68,6 @@ def test_headhunterapi_get_requests_http_error(mock_request, caplog):
     """Проверка обработки HTTP‑ошибки в get_requests (имитация через None)."""
     mock_request.return_value = None  # Имитируем сбой
 
-
     api = HeadHunterAPI()
     vacancies = api.get_requests(query=VALID_QUERY)
 
@@ -92,7 +78,6 @@ def test_headhunterapi_get_requests_http_error(mock_request, caplog):
 def test_headhunterapi_get_requests_network_error(mock_request, caplog):
     """Проверка обработки сетевой ошибки в get_requests (имитация через None)."""
     mock_request.return_value = None  # Имитируем сбой
-
 
     api = HeadHunterAPI()
     vacancies = api.get_requests(query=VALID_QUERY)
@@ -105,13 +90,11 @@ def test_headhunterapi__parse_items_valid():
     api = HeadHunterAPI()
     items = api._parse_items(MOCK_HH_RESPONSE)
 
-
     assert len(items) == 1
     assert "id" in items[0]
     assert "name" in items[0]
     assert items[0]["id"] == "12345"
     assert items[0]["name"] == "Python Developer"
-
 
 
 def test_headhunterapi__parse_items_missing_items():
@@ -133,25 +116,12 @@ def test_headhunterapi__parse_items_invalid_item():
     assert items[0].get("name") is None  # Поле отсутствует
 
 
-
 @patch.object(HeadHunterAPI, "_request")
 def test_headhunterapi_get_requests_with_pagination(mock_request):
     """Проверка работы с пагинацией в get_requests (несколько страниц)."""
     mock_request.side_effect = [
-        {
-            "items": [
-                {"id": "1", "name": "Dev 1", "alternate_url": "https://hh.ru/vacancy/1"}
-            ],
-            "pages": 2,
-            "found": 2
-        },
-        {
-            "items": [
-                {"id": "2", "name": "Dev 2", "alternate_url": "https://hh.ru/vacancy/2"}
-            ],
-            "pages": 2,
-            "found": 2
-        }
+        {"items": [{"id": "1", "name": "Dev 1", "alternate_url": "https://hh.ru/vacancy/1"}], "pages": 2, "found": 2},
+        {"items": [{"id": "2", "name": "Dev 2", "alternate_url": "https://hh.ru/vacancy/2"}], "pages": 2, "found": 2},
     ]
 
     api = HeadHunterAPI()
@@ -167,15 +137,9 @@ def test_headhunterapi_get_requests_excluded_text(mock_request):
     """Проверка фильтрации по excluded_text в get_requests (через мокированный ответ)."""
     # Имитируем, что API вернуло только 1 вакансию (уже отфильтрованную)
     mock_request.return_value = {
-        "items": [
-            {
-                "id": "2",
-                "name": "Senior Python Developer",
-                "alternate_url": "https://hh.ru/vacancy/2"
-            }
-        ],
+        "items": [{"id": "2", "name": "Senior Python Developer", "alternate_url": "https://hh.ru/vacancy/2"}],
         "found": 1,
-        "pages": 1
+        "pages": 1,
     }
 
     api = HeadHunterAPI()
@@ -253,7 +217,6 @@ class TestHeadHunterAPIRequest:
         assert mock_logger.error.call_count == 1
         assert "Неавторизованный запрос" in str(mock_logger.error.call_args)
 
-
     def test_request_http_429(self, mock_logger):
         """HTTP 429 → лимит запросов."""
         mock_response = MagicMock()
@@ -265,13 +228,11 @@ class TestHeadHunterAPIRequest:
         assert mock_logger.error.call_count == 1
         assert "Превышен лимит запросов" in str(mock_logger.error.call_args)
 
-
     def test_request_http_other_status(self, mock_logger):
         """Другие HTTP-статусы (например, 500) → общая ошибка."""
         mock_response = MagicMock()
         mock_response.status_code = 500
         mock_response.text = "Internal Server Error"
-
 
         with patch.object(self.api.session, "get", return_value=mock_response):
             result = self.api._request(self.endpoint, self.params)
@@ -280,13 +241,10 @@ class TestHeadHunterAPIRequest:
         assert "HTTP 500" in str(mock_logger.error.call_args)
         assert "Internal Server Error" in str(mock_logger.error.call_args)
 
-
     def test_request_network_exception(self, mock_logger):
         """Исключение сети (например, Timeout) → ошибка и None."""
         with patch.object(
-            self.api.session,
-            "get",
-            side_effect=requests.exceptions.RequestException("Connection failed")
+            self.api.session, "get", side_effect=requests.exceptions.RequestException("Connection failed")
         ):
             result = self.api._request(self.endpoint, self.params)
 

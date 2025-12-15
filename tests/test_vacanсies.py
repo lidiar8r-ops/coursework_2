@@ -1,9 +1,12 @@
-import pytest
 import logging
+
+import pytest
+
 from src.vacancies import Vacancy
 
 # Настройка логирования для тестов
 logging.getLogger("vacancy").setLevel(logging.ERROR)
+
 
 @pytest.fixture
 def sample_vacancy():
@@ -13,13 +16,15 @@ def sample_vacancy():
         salary="150000",
         description="Разработка на Python",
         employer="ООО ТехСофт",
-        published_at="2025-12-15T10:00:00"
+        published_at="2025-12-15T10:00:00",
     )
+
 
 # Исправление 1: тест валидации URL
 def test_init_raises_value_error_if_url_is_empty():
     with pytest.raises(ValueError, match="URL вакансии обязателен"):
         Vacancy(title="Test", url="", salary="100000", description="", employer="Test", published_at="")
+
 
 def test_init_raises_value_error_for_invalid_url():
     invalid_urls = ["", "justtext", "http:/invalid", "https://"]
@@ -29,6 +34,7 @@ def test_init_raises_value_error_for_invalid_url():
         # Проверяем только наличие ошибки, не точное сообщение
         assert "URL" in str(exc_info.value)
 
+
 # Исправление 2: тест обработки зарплаты в сеттере
 def test_salary_setter_processes_input():
     vacancy = Vacancy(title="Test", url="https://test.ru", salary="", description="", employer="Test", published_at="")
@@ -37,6 +43,7 @@ def test_salary_setter_processes_input():
     expected = "от250000руб."
     actual = vacancy.salary.replace(" ", "")
     assert actual == expected
+
 
 # Исправление 3: тест метода print_vacancies
 def test_print_vacancies(capfd, sample_vacancy):
@@ -66,6 +73,7 @@ def test_get_salary_value_returns_zero_for_unspecified_salary():
     vacancy = Vacancy(title="Test", url="https://test.ru", salary="", description="", employer="Test", published_at="")
     assert vacancy.get_salary_value() == 0.0
 
+
 def test_property_getters(sample_vacancy):
     assert sample_vacancy.title == "Python Developer"
     assert sample_vacancy.url == "https://hh.ru/123"
@@ -93,7 +101,7 @@ def test_from_hh_api():
         "alternate_url": "https://hh.ru/vacancy/456",
         "salary": {"from": 150000, "to": 200000, "currency": "руб."},
         "snippet": {"requirement": "Требуется Senior Python Developer..."},
-        "employer": {"name": "ООО Технософт"}
+        "employer": {"name": "ООО Технософт"},
     }
     vacancy = Vacancy.from_hh_api(api_response)
     assert vacancy.title == "Senior Python Developer"
@@ -109,10 +117,11 @@ def test_from_hh_api_no_salary():
         "alternate_url": "https://hh.ru/vacancy/789",
         "salary": None,
         "snippet": {},
-        "employer": {"name": "ООО Стартап"}
+        "employer": {"name": "ООО Стартап"},
     }
     vacancy = Vacancy.from_hh_api(api_response)
     assert vacancy.salary == "Зарплата не указана!"
+
 
 def test_comparison_operators():
     v1 = Vacancy(title="A", url="https://a.ru", salary="100000 руб.", description="", employer="", published_at="")
@@ -125,6 +134,7 @@ def test_comparison_operators():
     assert v2 > v1
     assert v2 >= v1
     assert v1 != v2
+
 
 def test_str_method(sample_vacancy):
     str_repr = str(sample_vacancy)

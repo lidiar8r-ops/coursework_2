@@ -151,11 +151,11 @@ class HeadHunterAPI(BaseAPI):
             List[Dict[str, Any]]: Список вакансий в формате JSON.
         """
         params = {
-                "text": query,
-                "excluded_text": kwargs.get("excluded_text", ""),
-                "area": kwargs.get("area", 104),
-                "per_page": kwargs.get("per_page", 20),
-            }
+            "text": query,
+            "excluded_text": kwargs.get("excluded_text", ""),
+            "area": kwargs.get("area", 104),
+            "per_page": kwargs.get("per_page", 20),
+        }
 
         all_vacancies = []
         page = 0
@@ -186,4 +186,4 @@ class HeadHunterAPI(BaseAPI):
             page += 1
 
         # Возвращаем не больше per_page вакансий
-        return all_vacancies[:kwargs.get("per_page", 20)]
+        return all_vacancies[: kwargs.get("per_page", 20)]

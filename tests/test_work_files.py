@@ -187,7 +187,6 @@ def test_load_data_handles_invalid_json(mock_file):
     assert saver.vacancies == []  # Список остаётся пустым
 
 
-
 def test_get_all_returns_empty_list_on_init(json_saver):
     """
     Проверяет, что при инициализации хранилища метод get_all() возвращает пустой список.
@@ -220,7 +219,7 @@ def test_get_all_with_multiple_vacancies(json_saver):
         salary="100000",
         description="",
         employer="Employer 1",
-        published_at="2025-12-15T10:00:00"
+        published_at="2025-12-15T10:00:00",
     )
     vacancy2 = Vacancy(
         title="Python Developer 2",
@@ -228,7 +227,7 @@ def test_get_all_with_multiple_vacancies(json_saver):
         salary="150000",
         description="",
         employer="Employer 2",
-        published_at="2025-12-15T11:00:00"
+        published_at="2025-12-15T11:00:00",
     )
 
     json_saver._add_vacancy(vacancy1)

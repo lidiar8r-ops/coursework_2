@@ -97,4 +97,3 @@ def json_saver(tmp_path):
     temp_file = tmp_path / "test_vacancies.json"
     saver = JSONSaver(filename=str(temp_file))
     return saver
-
