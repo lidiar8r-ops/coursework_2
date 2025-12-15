@@ -98,17 +98,3 @@ def json_saver(tmp_path):
     saver = JSONSaver(filename=str(temp_file))
     return saver
 
-
-
-#
-# # Фикстуры для упрощения создания объектов
-# @pytest.fixture
-# def sample_vacancy():
-#     return Vacancy(
-#         title="Python Developer",
-#         url="https://hh.ru/vacancy/123",
-#         salary="от 100 000 до 150 000 руб.",
-#         description="Требуется Python-разработчик...",
-#         employer="ООО Роботех",
-#         published_at="2023-10-01T10:00:00"
-#     )

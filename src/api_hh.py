@@ -113,6 +113,30 @@ class HeadHunterAPI(BaseAPI):
             return items
         return []
 
+    # def get_requests(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
+    #     """
+    #     Получает список вакансий по заданному запросу с фильтрацией и ограничением количества записей.
+    #
+    #     Args:
+    #         query (str): Основная строка для поиска вакансий.
+    #         excluded_text (str): Исключение текста (например, удаленные ключевые слова).
+    #         area (int, optional): Код региона (по умолчанию — Челябинская область).
+    #         per_page (int, optional): Максимальное число вакансий на странице (по умолчанию — 20).
+    #
+    #     Returns:
+    #         List[Dict[str, Any]]: Список вакансий в формате JSON.
+    #     """
+    #     params = {
+    #         "text": query,
+    #         "excluded_text": kwargs.get("excluded_text", ""),
+    #         "area": kwargs.get("area", 104),
+    #         "per_page": kwargs.get("per_page", 20),
+    #         "page": 0,
+    #     }
+    #
+    #     data = self._request("vacancies", params)
+    #     return self._parse_items(data)
+
     def get_requests(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
         """
         Получает список вакансий по заданному запросу с фильтрацией и ограничением количества записей.
@@ -127,12 +151,39 @@ class HeadHunterAPI(BaseAPI):
             List[Dict[str, Any]]: Список вакансий в формате JSON.
         """
         params = {
-            "text": query,
-            "excluded_text": kwargs.get("excluded_text", ""),
-            "area": kwargs.get("area", 104),
-            "per_page": kwargs.get("per_page", 20),
-            "page": 0,
-        }
+                "text": query,
+                "excluded_text": kwargs.get("excluded_text", ""),
+                "area": kwargs.get("area", 104),
+                "per_page": kwargs.get("per_page", 20),
+            }
 
-        data = self._request("vacancies", params)
-        return self._parse_items(data)
+        all_vacancies = []
+        page = 0
+
+        while True:
+            params["page"] = page
+            data = self._request("vacancies", params)
+
+            # Если запрос не удался или нет данных — выходим
+            if not data:
+                break
+
+            items = self._parse_items(data)
+            # Если на текущей странице нет вакансий — выходим (конец пагинации)
+            if not items:
+                break
+
+            all_vacancies.extend(items)
+
+            # Проверяем, есть ли ещё страницы
+            total_pages = data.get("pages", 0)
+            # Выходим, если:
+            # - достигли последней страницы (page >= total_pages - 1)
+            # - собрали достаточно вакансий (len(all_vacancies) >= per_page)
+            if page >= total_pages - 1 or len(all_vacancies) >= kwargs.get("per_page", 20):
+                break
+
+            page += 1
+
+        # Возвращаем не больше per_page вакансий
+        return all_vacancies[:kwargs.get("per_page", 20)]
