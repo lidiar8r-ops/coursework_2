@@ -113,30 +113,6 @@ class HeadHunterAPI(BaseAPI):
             return items
         return []
 
-    # def get_requests(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
-    #     """
-    #     Получает список вакансий по заданному запросу с фильтрацией и ограничением количества записей.
-    #
-    #     Args:
-    #         query (str): Основная строка для поиска вакансий.
-    #         excluded_text (str): Исключение текста (например, удаленные ключевые слова).
-    #         area (int, optional): Код региона (по умолчанию — Челябинская область).
-    #         per_page (int, optional): Максимальное число вакансий на странице (по умолчанию — 20).
-    #
-    #     Returns:
-    #         List[Dict[str, Any]]: Список вакансий в формате JSON.
-    #     """
-    #     params = {
-    #         "text": query,
-    #         "excluded_text": kwargs.get("excluded_text", ""),
-    #         "area": kwargs.get("area", 104),
-    #         "per_page": kwargs.get("per_page", 20),
-    #         "page": 0,
-    #     }
-    #
-    #     data = self._request("vacancies", params)
-    #     return self._parse_items(data)
-
     def get_requests(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
         """
         Получает список вакансий по заданному запросу с фильтрацией и ограничением количества записей.
@@ -187,3 +163,10 @@ class HeadHunterAPI(BaseAPI):
 
         # Возвращаем не больше per_page вакансий
         return all_vacancies[: kwargs.get("per_page", 20)]
+
+
+    def _request(self, endpoint: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+                Выполняет HTTP-запросы к API сервиса.
+        """
+        super()._request(endpoint, params)

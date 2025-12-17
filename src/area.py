@@ -137,28 +137,7 @@ class AreaAPI(BaseAPI):
         Returns:
             str: Найденный ID региона в виде строки или "0", если регион не найден.
         """
-        # if not data:
-        #     return "0"
-        #
-        # target_name = area_name.strip().lower()
-        #
-        # def search_in_areas(areas: List[Dict[str, Any]]) -> str:
-        #     for area in areas:
-        #         # 1. Проверяем имя текущего региона
-        #         current_name = area.get("name", "").strip().lower()
-        #         if current_name == target_name:
-        #             area_id = area.get("id")
-        #             return str(area_id) if area_id is not None else "0"
-        #
-        #         # 2. Проверяем вложенные регионы
-        #         sub_areas = area.get("areas")
-        #         if isinstance(sub_areas, list) and sub_areas:
-        #             result = search_in_areas(sub_areas)
-        #             if result != "0":
-        #                 return result
-        #     return "0"
-        #
-        # return search_in_areas(data)
+
         target_name = target_name.strip().lower()
 
         if isinstance(data, dict):
@@ -200,3 +179,10 @@ class AreaAPI(BaseAPI):
         except IOError as e:
             logger.error(f"Ошибка при сохранении в файл {self.filename}: {e}")
             raise
+
+
+    def _request(self, endpoint: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+                Выполняет HTTP-запросы к API сервиса.
+        """
+        super()._request(endpoint, params)
