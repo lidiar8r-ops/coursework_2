@@ -1,3 +1,4 @@
+import json
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
@@ -59,18 +60,16 @@ class BaseAPI(ABC):
         self.url = f"{URL_HH}/{endpoint}"
         try:
             response = self.session.get(self.url, params=params)
+
             if response.status_code == 200:
                 data = response.json()
                 if isinstance(data, dict):
                     return data
-                else:
-                    logger.error("Ответ API не является словарём")
-                    return None
-                # except json.JSONDecodeError:
-                #     logger.error("Не удалось декодировать JSON")
-                #     return None
+                logger.error("Ответ API не является словарём")
+                return None
 
-            elif response.status_code == 403:
+            # Обработка ошибок HTTP
+            if response.status_code == 403:
                 logger.error(f"Необходимо пройти CAPTCHA: {self.url}")
             elif response.status_code == 404:
                 logger.error(f"Ресурс не найден: {self.url}")
@@ -85,6 +84,9 @@ class BaseAPI(ABC):
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Ошибка сети: {e}")
+            return None
+        except json.JSONDecodeError:
+            logger.error("Не удалось декодировать JSON")
             return None
 
 
@@ -169,4 +171,4 @@ class HeadHunterAPI(BaseAPI):
         """
                 Выполняет HTTP-запросы к API сервиса.
         """
-        super()._request(endpoint, params)
+        return super()._request(endpoint, params)
