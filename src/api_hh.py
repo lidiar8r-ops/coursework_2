@@ -166,9 +166,8 @@ class HeadHunterAPI(BaseAPI):
         # Возвращаем не больше per_page вакансий
         return all_vacancies[: kwargs.get("per_page", 20)]
 
-
     def _request(self, endpoint: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
-                Выполняет HTTP-запросы к API сервиса.
+        Выполняет HTTP-запросы к API сервиса.
         """
         return super()._request(endpoint, params)
